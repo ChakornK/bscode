@@ -11,6 +11,24 @@ import ChatPanel from "@/components/ChatPanel";
 
 const editorTabs = [{ id: "chat", title: "Chat", icon: PiSparkle, component: <ChatPanel /> }];
 
+let fahhAudio = null;
+let lastFahhhTime = 0;
+const playFahhhSound = () => {
+  if (typeof window === 'undefined') return;
+  
+  const now = Date.now();
+  if (now - lastFahhhTime < 50) return; // 0.05 seconds cooldown
+  lastFahhhTime = now;
+  
+  if (!fahhAudio) {
+    fahhAudio = new Audio('/fahh.mp3');
+  }
+  
+  // Clone the node so rapid deletions overlap wildly instead of cutting off
+  const overlapNode = fahhAudio.cloneNode();
+  overlapNode.play().catch(e => console.error('Audio playback blocked or file missing: ', e));
+};
+
 export default function Editor() {
   const [html, setHtml] = useState("<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>");
   const [css, setCss] = useState("h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }");
@@ -103,16 +121,25 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                   <SplitterLayout vertical primaryIndex={0} percentage primaryInitialSize={33} secondaryInitialSize={66}>
                     <div className="flex h-full flex-col bg-white">
                       <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
-                      <MonacoEditor language="html" value={html} onChange={setHtml} theme="vs" />
+                      <MonacoEditor language="html" value={html} onChange={(v) => {
+                        if (v.length < html.length) playFahhhSound();
+                        setHtml(v);
+                      }} theme="vs" />
                     </div>
                     <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={window.innerHeight / 3}>
                       <div className="flex h-full flex-col bg-white">
                         <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
-                        <MonacoEditor language="css" value={css} onChange={setCss} theme="vs" />
+                        <MonacoEditor language="css" value={css} onChange={(v) => {
+                          if (v.length < css.length) playFahhhSound();
+                          setCss(v);
+                        }} theme="vs" />
                       </div>
                       <div className="flex h-full flex-col bg-white">
                         <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">JS</div>
-                        <MonacoEditor language="javascript" value={js} onChange={setJs} theme="vs" />
+                        <MonacoEditor language="javascript" value={js} onChange={(v) => {
+                          if (v.length < js.length) playFahhhSound();
+                          setJs(v);
+                        }} theme="vs" />
                       </div>
                     </SplitterLayout>
                   </SplitterLayout>
