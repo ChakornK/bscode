@@ -33,7 +33,7 @@ export function ActivityBar() {
       {items.map((item) => (
         <button
           key={item.id}
-          onClick={() => setActiveId(item.id)}
+          onClick={() => setActiveId(activeId === item.id ? null : item.id)}
           className={`group relative cursor-pointer p-3 transition-colors duration-200 ${
             activeId === item.id ? "text-neutral-900" : "text-neutral-700 hover:text-neutral-900"
           }`}
@@ -56,9 +56,9 @@ export function SidebarView() {
   if (!activeItem) return null;
 
   return (
-    <div className="flex h-full flex-col bg-[#f3f3f3]">
+    <div className="flex h-full flex-col bg-white">
       <div className="flex items-center justify-between px-4 py-3">
-        <h2 className="select-none text-[11px] font-bold uppercase tracking-wider text-[#6f6f6f]">{activeItem.title}</h2>
+        <h2 className="select-none text-[11px] font-bold uppercase tracking-wider text-neutral-500">{activeItem.title}</h2>
       </div>
       <div className="flex-1 overflow-hidden">{activeItem.component}</div>
     </div>
