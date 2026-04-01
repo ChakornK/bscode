@@ -29,6 +29,22 @@ const playFahhhSound = () => {
   overlapNode.play().catch(e => console.error('Audio playback blocked or file missing: ', e));
 };
 
+let isDeletingKey = false;
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      isDeletingKey = true;
+    } else {
+      isDeletingKey = false;
+    }
+  }, true);
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      isDeletingKey = false;
+    }
+  }, true);
+}
+
 export default function Editor() {
   const [html, setHtml] = useState("<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>");
   const [css, setCss] = useState("h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }");
@@ -122,7 +138,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                     <div className="flex h-full flex-col bg-white">
                       <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
                       <MonacoEditor language="html" value={html} onChange={(v) => {
-                        if (v.length < html.length) playFahhhSound();
+                        if (isDeletingKey && v.replace(/\s/g, '').length < html.replace(/\s/g, '').length) playFahhhSound();
                         setHtml(v);
                       }} theme="vs" />
                     </div>
@@ -130,14 +146,14 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                       <div className="flex h-full flex-col bg-white">
                         <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
                         <MonacoEditor language="css" value={css} onChange={(v) => {
-                          if (v.length < css.length) playFahhhSound();
+                          if (isDeletingKey && v.replace(/\s/g, '').length < css.replace(/\s/g, '').length) playFahhhSound();
                           setCss(v);
                         }} theme="vs" />
                       </div>
                       <div className="flex h-full flex-col bg-white">
                         <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">JS</div>
                         <MonacoEditor language="javascript" value={js} onChange={(v) => {
-                          if (v.length < js.length) playFahhhSound();
+                          if (isDeletingKey && v.replace(/\s/g, '').length < js.replace(/\s/g, '').length) playFahhhSound();
                           setJs(v);
                         }} theme="vs" />
                       </div>
