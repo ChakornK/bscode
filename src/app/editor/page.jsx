@@ -8,6 +8,8 @@ import { EditorLayout } from "@/components/editor/EditorLayout";
 import { SidebarProvider, ActivityBar, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
 import MonacoEditor from "@/components/editor/MonacoEditor";
 
+const editorTabs = [{ id: "test", title: "Test", icon: PiFlask, component: <div>Test</div> }];
+
 export default function Editor() {
   const [html, setHtml] = useState("<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>");
   const [css, setCss] = useState("h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }");
@@ -36,19 +38,10 @@ export default function Editor() {
     return () => clearTimeout(timeout);
   }, [combinedCode]);
 
-  const editorTabs = [{ id: "test", title: "Test", icon: PiFlask }];
-
   return (
     <EditorLayout>
       <div className="flex w-screen flex-1 overflow-hidden">
-        <SidebarProvider
-          initialItems={editorTabs.map((tab) => ({
-            id: tab.id,
-            icon: tab.icon,
-            title: tab.title,
-            component: <div>Test</div>,
-          }))}
-        >
+        <SidebarProvider initialItems={editorTabs}>
           <EditorContent html={html} setHtml={setHtml} css={css} setCss={setCss} js={js} setJs={setJs} srcDoc={srcDoc} />
         </SidebarProvider>
       </div>
