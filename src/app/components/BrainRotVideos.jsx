@@ -1,14 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { useState } from "react";
 
-export default function BrainRotVideos({ isOpen, onClose }) {
+export default function BrainRotVideos({ isOpen }) {
     // Arr for youtube video sources
     const internalVideoSources = [
         {
             label: "Subway Surfers",
             videos: ["nNGQ7kMhGuQ", "Tqne5J7XdPA", "hs7Z0JUgDeA", "iYgYfHb8gbQ"],
             width: 300,
+            portrait: true,
         },
         {
             label: "Minecraft Parkour",
@@ -64,29 +63,36 @@ export default function BrainRotVideos({ isOpen, onClose }) {
     return (
         <div className="w-full">
             {/* Video */}
-            <div>
-                {videoUrl && (
+            {videoUrl && (
+                <div className="relative w-full" style={{ paddingBottom: source?.portrait ? "177.78%" : "56.25%" }}>
                     <iframe
                         key={videoUrl}
-                        src={`https://www.youtube.com/embed/${videoUrl}?autoplay=1`}
-                        width={source.width}
-                        height={source.width * 0.5625}
+                        src={`https://www.youtube-nocookie.com/embed/${videoUrl}?controls=0&disablekb=1&autoplay=1&mute=1&loop=1&playlist=${videoUrl}`}
                         allow="autoplay; encrypted-media"
-                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
                     />
-                )}
-            </div>
+                    <div className="absolute inset-0" />
+                </div>
+            )}
 
             {/* Source selector */}
-            <div className="flex flex-col">
-                <ButtonGroup>
+            <div className="flex flex-col overflow-y-auto">
                 {labels.map(label => (
-                    <Button key={label} onClick={() => handleSelectLabel(label)} size="sm"
-                    variant={source?.label === label ? "default" : "outline"}>
-                        {label}
-                    </Button>
+                    <button
+                        key={label}
+                        onClick={() => handleSelectLabel(label)}
+                        className={`relative px-3 py-1.5 text-left text-xs transition-colors duration-100 ${
+                            source?.label === label
+                                ? "bg-neutral-100 text-neutral-900 font-medium"
+                                : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700"
+                        }`}
+                    >
+                        {source?.label === label && (
+                            <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-neutral-900" />
+                        )}
+                        <span className="pl-1">{label}</span>
+                    </button>
                 ))}
-                </ButtonGroup>
             </div>
         </div>
     );

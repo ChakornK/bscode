@@ -1,11 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import "react-splitter-layout/lib/index.css";
-import { PiSparkle } from "react-icons/pi";
 import { EditorLayout } from "@/components/editor/EditorLayout";
-import { SidebarProvider, ActivityBar, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
+import { ActivityBar, SidebarProvider, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
 import MonacoEditor from "@/components/editor/MonacoEditor";
+import { useEffect, useMemo, useState } from "react";
+import { MdOutlineSlowMotionVideo } from "react-icons/md";
+import { PiFlask } from "react-icons/pi";
+import SplitterLayout from "react-splitter-layout";
+import "react-splitter-layout/lib/index.css";
+import BrainRotVideos from "../components/BrainRotVideos";
+
+function BrainRotTab() {
+  const {activeId} = useSidebar();
+  return <BrainRotVideos isOpen={activeId === "brain-rot-video"} onClose={() => {}} />
+};
 import ChatPanel from "@/components/ChatPanel";
 import dynamic from "next/dynamic";
 
@@ -41,10 +49,21 @@ export default function Editor() {
     return () => clearTimeout(timeout);
   }, [combinedCode]);
 
+  const editorTabs = [{ id: "test", title: "Test", icon: PiFlask, component: <div>Test</div> },
+    { id: "brain-rot-video", title: "Brain Rot Video", icon: MdOutlineSlowMotionVideo, component: <BrainRotTab/> },
+  ];
+
   return (
     <EditorLayout>
       <div className="flex w-screen flex-1 overflow-hidden">
-        <SidebarProvider initialItems={editorTabs}>
+        <SidebarProvider
+          initialItems={editorTabs.map((tab) => ({
+            id: tab.id,
+            icon: tab.icon,
+            title: tab.title,
+            component: tab.component,
+          }))}
+        >
           <EditorContent html={html} setHtml={setHtml} css={css} setCss={setCss} js={js} setJs={setJs} srcDoc={srcDoc} />
         </SidebarProvider>
       </div>
