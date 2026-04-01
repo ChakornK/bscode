@@ -56,8 +56,29 @@ export default function Editor() {
   );
 }
 
+let capturedPointerId;
 function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
   const { activeId } = useSidebar();
+
+  const documentPointerMoveOnceListener = ({ pointerId }) => {
+    document.removeEventListener("pointermove", documentPointerMoveOnceListener);
+    capturedPointerId = pointerId;
+    document.documentElement.setPointerCapture(capturedPointerId);
+  };
+  const setDocumentPointerCapture = () => {
+    document.addEventListener("pointermove", documentPointerMoveOnceListener);
+  };
+  const releaseDocumentPointerCapture = () => {
+    if (capturedPointerId) {
+      document.documentElement.releasePointerCapture(capturedPointerId);
+    }
+  };
+  useEffect(() => {
+    return () => {
+      document.removeEventListener("pointermove", documentPointerMoveOnceListener);
+      releaseDocumentPointerCapture();
+    };
+  }, []);
 
   return (
     <>
@@ -65,40 +86,52 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
         <ActivityBar />
       </EditorLayout.ActivityBar>
 
-      {activeId && (
-        <EditorLayout.Sidebar>
-          <SidebarView />
-        </EditorLayout.Sidebar>
-      )}
-
-      <EditorLayout.Main>
-        <SplitterLayout horizontal primaryIndex={0} secondaryInitialSize={40} percentage>
-          <div className="flex h-full flex-col">
-            <div className="flex flex-1 overflow-hidden">
-              <SplitterLayout vertical primaryIndex={0} percentage primaryInitialSize={33} secondaryInitialSize={66}>
-                <div className="flex h-full flex-col bg-white">
-                  <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
-                  <MonacoEditor language="html" value={html} onChange={setHtml} theme="vs" />
+      <div className="relative grow">
+        <SplitterLayout horizontal primaryIndex={1} secondaryInitialSize={240} secondaryMinSize={180}>
+          {activeId && (
+            <EditorLayout.Sidebar>
+              <SidebarView />
+            </EditorLayout.Sidebar>
+          )}
+          <EditorLayout.Main>
+            <SplitterLayout
+              horizontal
+              primaryIndex={0}
+              secondaryInitialSize={40}
+              primaryMinSize={20}
+              secondaryMinSize={20}
+              percentage
+              onDragStart={setDocumentPointerCapture}
+              onDragEnd={releaseDocumentPointerCapture}
+            >
+              <div className="flex h-full flex-col">
+                <div className="flex flex-1 overflow-hidden">
+                  <SplitterLayout vertical primaryIndex={0} percentage primaryInitialSize={33} secondaryInitialSize={66}>
+                    <div className="flex h-full flex-col bg-white">
+                      <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
+                      <MonacoEditor language="html" value={html} onChange={setHtml} theme="vs" />
+                    </div>
+                    <SplitterLayout vertical primaryIndex={0}>
+                      <div className="flex h-full flex-col bg-white">
+                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
+                        <MonacoEditor language="css" value={css} onChange={setCss} theme="vs" />
+                      </div>
+                      <div className="flex h-full flex-col bg-white">
+                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">JS</div>
+                        <MonacoEditor language="javascript" value={js} onChange={setJs} theme="vs" />
+                      </div>
+                    </SplitterLayout>
+                  </SplitterLayout>
                 </div>
-                <SplitterLayout vertical primaryIndex={0}>
-                  <div className="flex h-full flex-col bg-white">
-                    <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
-                    <MonacoEditor language="css" value={css} onChange={setCss} theme="vs" />
-                  </div>
-                  <div className="flex h-full flex-col bg-white">
-                    <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">JS</div>
-                    <MonacoEditor language="javascript" value={js} onChange={setJs} theme="vs" />
-                  </div>
-                </SplitterLayout>
-              </SplitterLayout>
-            </div>
-          </div>
-          <div className="flex h-full flex-col bg-white">
-            <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">Output</div>
-            <iframe srcDoc={srcDoc} title="output" sandbox="allow-scripts" width="100%" height="100%" className="bg-white" />
-          </div>
+              </div>
+              <div className="flex h-full flex-col bg-white">
+                <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">Output</div>
+                <iframe srcDoc={srcDoc} title="output" sandbox="allow-scripts" width="100%" height="100%" className="bg-white" />
+              </div>
+            </SplitterLayout>
+          </EditorLayout.Main>
         </SplitterLayout>
-      </EditorLayout.Main>
+      </div>
     </>
   );
 }
