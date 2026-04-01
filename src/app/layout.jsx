@@ -12,7 +12,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={cn("h-full", "font-sans", inter.variable)}>
-      <body>{children}</body>
+      <body className="h-full">{children}</body>
     </html>
   );
 }
