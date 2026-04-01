@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { pipeline, env } from '@huggingface/transformers';
 
 // Tell the library to ignore local file system logic to work properly in Next.js browser router
@@ -87,6 +88,7 @@ const cropCanvasToDrawing = (canvas) => {
 };
 
 export default function Login() {
+  const router = useRouter();
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
@@ -207,7 +209,10 @@ export default function Login() {
                       distance <= 10;
       
       if (isMatch && password === 'jeffieissilly') {
-        setStatusMessage(`Login successful! Detected: ${predictedText || 'Jeffiehu@gmail.com'}`);
+        setStatusMessage(`Login successful! Redirecting to editor...`);
+        setTimeout(() => {
+          router.push('/editor');
+        }, 1200);
       } else if (!isMatch) {
         setStatusMessage(`Login failed. Detected handwriting: "${predictedText}". Only true Jeffs permitted.`);
       } else {
@@ -220,22 +225,16 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans text-slate-100">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[40%] -left-[10%] w-[70%] h-[70%] rounded-full bg-purple-600/20 blur-[120px]" />
-        <div className="absolute top-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-blue-500/20 blur-[120px]" />
-      </div>
-
-      <div className="relative z-10 w-full max-w-3xl bg-white/5 backdrop-blur-xl border border-white/10 p-8 sm:p-12 rounded-3xl shadow-2xl flex flex-col items-center">
+    <div className="min-h-screen bg-[#f3f3f3] flex items-center justify-center p-4 font-sans text-slate-800">
+      <div className="w-full max-w-3xl bg-white border border-slate-300 p-8 sm:p-12 rounded shadow-sm flex flex-col items-center">
         <div className="mb-10 text-center">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-3 tracking-tight">
-            BSCode Login
+          <h1 className="text-3xl font-medium text-slate-800 mb-2 tracking-tight">
+            BSCode
           </h1>
-          <p className="text-slate-400 text-lg">Draw your email address to authenticate</p>
+          <p className="text-slate-500 text-base">Draw your email address to authenticate</p>
         </div>
         
-        <div className="relative group rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-white/20 mb-8 bg-white transition-transform duration-300 hover:scale-[1.02]">
+        <div className="relative group border border-slate-300 mb-8 bg-white rounded-sm overflow-hidden w-full max-w-[600px]">
           <canvas
             ref={canvasRef}
             width={600}
@@ -249,39 +248,39 @@ export default function Login() {
           />
           <button 
             onClick={clearCanvas}
-            className="absolute top-4 right-4 bg-slate-900/40 hover:bg-slate-900/80 text-white rounded-full p-2.5 backdrop-blur-md transition-all duration-200"
+            className="absolute top-3 right-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded p-2 transition-colors border border-slate-200"
             title="Clear Drawing"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
           </button>
         </div>
 
-        <div className="w-full max-w-full mb-8 relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div className="w-full max-w-[600px] mb-8 relative group">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
           <input 
             type="password" 
-            placeholder="Enter password..." 
+            placeholder="Password" 
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-slate-900/40 border border-white/10 rounded-xl pl-12 pr-5 py-4 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all backdrop-blur-sm shadow-inner"
+            className="w-full bg-white border border-slate-300 rounded-sm pl-10 pr-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#007acc] focus:ring-1 focus:ring-[#007acc] transition-colors"
           />
         </div>
 
         <button 
           onClick={handleLogin}
-          className="w-full sm:w-auto min-w-[240px] py-3.5 px-8 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold text-lg shadow-lg shadow-purple-500/25 transform transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+          className="w-full max-w-[600px] py-2.5 px-8 rounded-sm bg-[#007acc] hover:bg-[#0062a3] text-white font-medium text-base transition-colors flex items-center justify-center gap-2"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
           Authenticate
         </button>
         
         {statusMessage && (
-          <div className={`mt-8 p-4 rounded-xl border w-full max-w-lg text-center font-medium shadow-inner transition-opacity duration-300 ${
-            statusMessage.includes('successful') ? 'bg-green-500/10 border-green-500/30 text-green-400' :
-            statusMessage.includes('failed') ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-            'bg-blue-500/10 border-blue-500/30 text-blue-400 animate-pulse'
+          <div className={`mt-6 p-3 rounded-sm border w-full max-w-[600px] text-center text-sm font-medium transition-opacity duration-300 ${
+            statusMessage.includes('successful') ? 'bg-green-50 border-green-300 text-green-800' :
+            statusMessage.includes('failed') ? 'bg-red-50 border-red-300 text-red-800' :
+            'bg-blue-50 border-blue-300 text-blue-800 animate-pulse'
           }`}>
             {statusMessage}
           </div>
