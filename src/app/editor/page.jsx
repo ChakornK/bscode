@@ -12,14 +12,8 @@ import BrainRotVideos from "../components/BrainRotVideos";
 
 function BrainRotTab() {
   const {activeId} = useSidebar();
-  return <BrainRotVideos isOpen={activeId === "brain-rot-video"} onClose={() => {}} />
+  return <BrainRotVideos isOpen={activeId === "brain-rot-video"} />
 };
-import ChatPanel from "@/components/ChatPanel";
-import dynamic from "next/dynamic";
-
-const SplitterLayout = dynamic(() => import("react-splitter-layout"), { ssr: false });
-
-const editorTabs = [{ id: "chat", title: "Chat", icon: PiSparkle, component: <ChatPanel /> }];
 
 export default function Editor() {
   const [html, setHtml] = useState("<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>");
