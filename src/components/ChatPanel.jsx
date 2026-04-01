@@ -11,6 +11,7 @@ import {
   MessageContent,
 } from "@/components/prompt-kit/message"
 import { Button } from "@/components/prompt-kit/button"
+import { ChatInput } from "@/components/ChatInput"
 import { useEffect, useRef, useState } from "react"
 
 export default function ChatPanel() {
@@ -39,9 +40,26 @@ export default function ChatPanel() {
     },
   ])
 
+  const [input, setInput] = useState("")
   const [isStreaming, setIsStreaming] = useState(false)
   const streamIntervalRef = useRef(null)
   const streamContentRef = useRef("")
+
+  const handleSubmit = () => {
+    const trimmedInput = input.trim()
+
+    if (!trimmedInput) return
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        role: "user",
+        content: trimmedInput,
+      },
+    ])
+    setInput("")
+  }
 
   const streamResponse = () => {
     if (isStreaming) return
@@ -92,16 +110,16 @@ export default function ChatPanel() {
   }, [])
 
   return (
-    <div className="flex flex-col w-full h-100 overflow-hidden">
-      <div className="flex justify-between items-center p-3 border-b">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+      <div className="flex shrink-0 items-center justify-between border-b p-3">
         <div />
         <Button size="sm" onClick={streamResponse} disabled={isStreaming}>
           {isStreaming ? "Streaming..." : "Show Streaming"}
         </Button>
       </div>
 
-      <ChatContainerRoot className="flex-1">
-        <ChatContainerContent className="space-y-4 p-4">
+      <ChatContainerRoot className="flex-1 min-h-0 overflow-y-auto">
+        <ChatContainerContent className="min-h-full space-y-4 p-4">
           {messages.map((message) => {
             const isAssistant = message.role === "assistant"
 
@@ -135,6 +153,15 @@ export default function ChatPanel() {
           })}
         </ChatContainerContent>
       </ChatContainerRoot>
+
+      <div className="shrink-0 border-t bg-background p-3">
+        <ChatInput
+          value={input}
+          onValueChange={setInput}
+          isLoading={isStreaming}
+          onSubmit={handleSubmit}
+        />
+      </div>
     </div>
   )
 }
