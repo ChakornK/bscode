@@ -1,10 +1,18 @@
 "use client";
 
-import { ChatContainerContent, ChatContainerRoot } from "@/components/prompt-kit/chat-container";
-import { Markdown } from "@/components/prompt-kit/markdown";
-import { Message, MessageAvatar, MessageContent } from "@/components/prompt-kit/message";
-import { Button } from "@/components/prompt-kit/button";
-import { useEffect, useRef, useState } from "react";
+import {
+  ChatContainerContent,
+  ChatContainerRoot,
+} from "@/components/prompt-kit/chat-container"
+import { Markdown } from "@/components/prompt-kit/markdown"
+import {
+  Message,
+  MessageAvatar,
+  MessageContent,
+} from "@/components/prompt-kit/message"
+import { Button } from "@/components/prompt-kit/button"
+import { ChatInput } from "@/components/ChatInput"
+import { useEffect, useRef, useState } from "react"
 
 export default function ChatPanel() {
   const [messages, setMessages] = useState([
@@ -31,9 +39,26 @@ export default function ChatPanel() {
     },
   ]);
 
-  const [isStreaming, setIsStreaming] = useState(false);
-  const streamIntervalRef = useRef(null);
-  const streamContentRef = useRef("");
+  const [input, setInput] = useState("")
+  const [isStreaming, setIsStreaming] = useState(false)
+  const streamIntervalRef = useRef(null)
+  const streamContentRef = useRef("")
+
+  const handleSubmit = () => {
+    const trimmedInput = input.trim()
+
+    if (!trimmedInput) return
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        role: "user",
+        content: trimmedInput,
+      },
+    ])
+    setInput("")
+  }
 
   const streamResponse = () => {
     if (isStreaming) return;
@@ -78,25 +103,25 @@ export default function ChatPanel() {
   }, []);
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b p-3">
+    <div className="flex flex-col w-full h-full min-h-0 overflow-hidden">
+      <div className="flex justify-between items-center p-3 border-b shrink-0">
         <div />
         <Button size="sm" onClick={streamResponse} disabled={isStreaming}>
           {isStreaming ? "Streaming..." : "Show Streaming"}
         </Button>
       </div>
 
-      <ChatContainerRoot className="flex-1">
-        <ChatContainerContent className="space-y-4 p-4">
+      <ChatContainerRoot className="flex-1 min-h-0 overflow-y-auto">
+        <ChatContainerContent className="space-y-4 p-4 min-h-full">
           {messages.map((message) => {
             const isAssistant = message.role === "assistant";
 
             return (
               <Message key={message.id} className={message.role === "user" ? "justify-end" : "justify-start"}>
                 {isAssistant && <MessageAvatar src="/avatars/ai.png" alt="AI Assistant" fallback="AI" />}
-                <div className="max-w-[85%] flex-1 sm:max-w-[75%]">
+                <div className="flex-1 max-w-[85%] sm:max-w-[75%]">
                   {isAssistant ?
-                    <div className="bg-secondary text-foreground prose rounded-lg p-2">
+                    <div className="bg-secondary p-2 rounded-lg text-foreground prose">
                       <Markdown>{message.content}</Markdown>
                     </div>
                   : <MessageContent className="bg-primary text-primary-foreground">{message.content}</MessageContent>}
@@ -106,6 +131,15 @@ export default function ChatPanel() {
           })}
         </ChatContainerContent>
       </ChatContainerRoot>
+
+      <div className="bg-background p-3 border-t shrink-0">
+        <ChatInput
+          value={input}
+          onValueChange={setInput}
+          isLoading={isStreaming}
+          onSubmit={handleSubmit}
+        />
+      </div>
     </div>
-  );
+  )
 }

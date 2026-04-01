@@ -1,15 +1,26 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import SplitterLayout from "react-splitter-layout";
 import "react-splitter-layout/lib/index.css";
-import { PiSparkle } from "react-icons/pi";
 import { EditorLayout } from "@/components/editor/EditorLayout";
-import { SidebarProvider, ActivityBar, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
+import { ActivityBar, SidebarProvider, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
 import MonacoEditor from "@/components/editor/MonacoEditor";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { MdOutlineChat, MdOutlineSlowMotionVideo } from "react-icons/md";
+import BrainRotVideos from "../components/BrainRotVideos";
 import ChatPanel from "@/components/ChatPanel";
+import dynamic from "next/dynamic";
 
-const editorTabs = [{ id: "chat", title: "Chat", icon: PiSparkle, component: <ChatPanel /> }];
+const SplitterLayout = dynamic(() => import("react-splitter-layout"), { ssr: false });
+
+function BrainRotTab() {
+  const { activeId } = useSidebar();
+  return <BrainRotVideos isOpen={activeId === "brain-rot-video"} />;
+}
+
+const editorTabs = [
+  { id: "chat", title: "Chat", icon: MdOutlineChat, component: <ChatPanel /> },
+  { id: "brain-rot-video", title: "Brain Rot Video", icon: MdOutlineSlowMotionVideo, component: <BrainRotTab /> },
+];
 
 let fahhAudio = null;
 let lastFahhhTime = 0;
@@ -220,6 +231,13 @@ export default function Editor() {
   const [css, setCss] = useState("h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }");
   const [js, setJs] = useState("console.log('Hello from JS!');");
 
+  const [eruda, setEruda] = useState("");
+  useEffect(() => {
+    fetch("https://cdn.jsdelivr.net/npm/eruda")
+      .then((res) => res.text())
+      .then((text) => setEruda(`<script>${text}\n;self.eruda.init({tool: ['console', 'elements'], useShadowDom: true, defaults: {theme: "Light"}});</script>`));
+  }, []);
+
   const combinedCode = useMemo(() => {
     return `
       <html>
@@ -228,6 +246,7 @@ export default function Editor() {
         </head>
         <body>
           ${html}
+          ${eruda}
           <script>${js}</script>
         </body>
       </html>
@@ -246,7 +265,14 @@ export default function Editor() {
   return (
     <EditorLayout>
       <div className="flex w-screen flex-1 overflow-hidden">
-        <SidebarProvider initialItems={editorTabs}>
+        <SidebarProvider
+          initialItems={editorTabs.map((tab) => ({
+            id: tab.id,
+            icon: tab.icon,
+            title: tab.title,
+            component: tab.component,
+          }))}
+        >
           <EditorContent html={html} setHtml={setHtml} css={css} setCss={setCss} js={js} setJs={setJs} srcDoc={srcDoc} />
         </SidebarProvider>
       </div>
@@ -328,7 +354,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                         setHtml(v);
                       }} theme="vs" />
                     </div>
-                    <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={window.innerHeight / 3}>
+                    <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={(window?.innerHeight ?? 0) / 3}>
                       <div className="flex h-full flex-col bg-white">
                         <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
                         <MonacoEditor language="css" value={css} onChange={(v, cursorCoords) => {
@@ -357,7 +383,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
               </div>
               <div className="flex h-full flex-col bg-white">
                 <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">Output</div>
-                <iframe srcDoc={srcDoc} title="output" sandbox="allow-scripts" width="100%" height="100%" className="bg-white" />
+                <iframe srcDoc={srcDoc} title="output" width="100%" height="100%" className="bg-white" />
               </div>
             </SplitterLayout>
           </EditorLayout.Main>
