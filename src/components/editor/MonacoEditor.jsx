@@ -33,7 +33,21 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs" }
 
         editorRef.current.onDidChangeModelContent(() => {
           if (onChange) {
-            onChange(editorRef.current.getValue());
+            const cursorPos = editorRef.current.getPosition();
+            const layoutInfo = editorRef.current.getLayoutInfo();
+            const topOffset = editorRef.current.getTopForLineNumber(cursorPos.lineNumber);
+            
+            // Get the approximate x position (left of editor + some offset for the column)
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const lineNumberWidth = layoutInfo.lineNumbersWidth;
+            const charWidth = layoutInfo.averageCharacterWidth || 8;
+            
+            const cursorCoords = {
+              top: containerRect.top + topOffset,
+              left: containerRect.left + lineNumberWidth + (cursorPos.column * charWidth)
+            };
+            
+            onChange(editorRef.current.getValue(), cursorCoords);
           }
         });
       }
