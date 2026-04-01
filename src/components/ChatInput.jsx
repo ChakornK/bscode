@@ -16,12 +16,17 @@ export function ChatInput({
   onSubmit,
   className = "",
 }) {
+  const handleSubmit = () => {
+    if (isLoading) return
+    onSubmit?.()
+  }
+
   return (
     <PromptInput
       value={value}
       onValueChange={onValueChange}
       isLoading={isLoading}
-      onSubmit={onSubmit}
+      onSubmit={handleSubmit}
       className={`w-full ${className}`}
     >
       <PromptInputTextarea placeholder="Ask me anything..." />
@@ -33,7 +38,8 @@ export function ChatInput({
             variant="default"
             size="icon"
             className="rounded-full w-8 h-8"
-            onClick={onSubmit}
+            onClick={handleSubmit}
+            disabled={isLoading}
           >
             {isLoading ? (
               <Square className="fill-current size-5" />
