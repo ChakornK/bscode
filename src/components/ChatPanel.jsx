@@ -4,13 +4,8 @@ import {
   ChatContainerContent,
   ChatContainerRoot,
 } from "@/components/prompt-kit/chat-container"
-import { Markdown } from "@/components/prompt-kit/markdown"
-import {
-  Message,
-  MessageAvatar,
-  MessageContent,
-} from "@/components/prompt-kit/message"
 import { ChatInput } from "@/components/ChatInput"
+import { MessageBasic } from "@/components/Message"
 import { useEditorCode } from "@/components/editor/EditorCodeContext"
 import { useEffect, useRef, useState } from "react"
 
@@ -213,34 +208,12 @@ export default function ChatPanel() {
       <ChatContainerRoot className="flex-1 min-h-0 overflow-y-auto">
         <ChatContainerContent className="space-y-4 p-4 min-h-full">
           {messages.map((message) => {
-            const isAssistant = message.role === "assistant"
-
             return (
-              <Message
+              <MessageBasic
                 key={message.id}
-                className={
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }
-              >
-                {isAssistant && (
-                  <MessageAvatar
-                    src="/avatars/ai.png"
-                    alt="AI Assistant"
-                    fallback="AI"
-                  />
-                )}
-                <div className="flex-1 max-w-[85%] sm:max-w-[75%]">
-                  {isAssistant ? (
-                    <div className="bg-secondary p-2 rounded-lg text-foreground prose">
-                      <Markdown>{message.content}</Markdown>
-                    </div>
-                  ) : (
-                    <MessageContent className="bg-primary text-primary-foreground">
-                      {message.content}
-                    </MessageContent>
-                  )}
-                </div>
-              </Message>
+                role={message.role}
+                content={message.content}
+              />
             )
           })}
         </ChatContainerContent>
