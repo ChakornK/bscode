@@ -6,6 +6,7 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs", 
   const containerRef = useRef(null);
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
+  const timeoutIdsRef = useRef(new Set());
   const onChangeRef = useRef(onChange);
   const onErrorCountChangeRef = useRef(onErrorCountChange);
   const [errorCount, setErrorCount] = useState(0);
@@ -58,7 +59,63 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs", 
           onErrorCountChangeRef.current?.(nextCount);
         };
 
-        editorRef.current.onDidChangeModelContent(() => {
+        editorRef.current.onDidChangeModelContent((event) => {
+          const model = editorRef.current?.getModel();
+          if (model) {
+            for (const change of event.changes) {
+              if (!change.text || !change.text.includes("6")) continue;
+
+              for (let i = 0; i < change.text.length; i += 1) {
+                if (change.text[i] !== "6") continue;
+
+                const sixStart = model.getPositionAt(change.rangeOffset + i);
+                const sixEnd = model.getPositionAt(change.rangeOffset + i + 1);
+                const decorationIds = model.deltaDecorations([], [
+                  {
+                    range: new monaco.Range(
+                      sixStart.lineNumber,
+                      sixStart.column,
+                      sixEnd.lineNumber,
+                      sixEnd.column
+                    ),
+                    options: {
+                      stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+                    },
+                  },
+                ]);
+
+                const timeoutId = setTimeout(() => {
+                  timeoutIdsRef.current.delete(timeoutId);
+                  const editor = editorRef.current;
+                  const activeModel = editor?.getModel();
+                  if (!editor || !activeModel) return;
+
+                  const decorationId = decorationIds[0];
+                  if (!decorationId) return;
+
+                  const range = activeModel.getDecorationRange(decorationId);
+                  activeModel.deltaDecorations([decorationId], []);
+                  if (!range) return;
+
+                  editor.executeEdits("auto-insert-7", [
+                    {
+                      range: new monaco.Range(
+                        range.endLineNumber,
+                        range.endColumn,
+                        range.endLineNumber,
+                        range.endColumn
+                      ),
+                      text: "7",
+                      forceMoveMarkers: true,
+                    },
+                  ]);
+                }, 2000);
+
+                timeoutIdsRef.current.add(timeoutId);
+              }
+            }
+          }
+
           if (onChangeRef.current) {
             const cursorPos = editorRef.current.getPosition();
             const layoutInfo = editorRef.current.getLayoutInfo();
@@ -99,6 +156,8 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs", 
     return () => {
       mounted = false;
       onErrorCountChangeRef.current?.(0);
+      timeoutIdsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+      timeoutIdsRef.current.clear();
       if (editorRef.current) {
         editorRef.current.__markerSubscription?.dispose?.();
         editorRef.current.__modelChangeSubscription?.dispose?.();
