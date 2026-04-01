@@ -56,5 +56,5 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs" }
     }
   }, [value]);
 
-  return <div ref={containerRef} className="h-full w-full" />;
+  return <div ref={containerRef} className="min-h-0 grow" />;
 }
