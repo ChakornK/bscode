@@ -25,19 +25,19 @@ const editorTabs = [
 let fahhAudio = null;
 let lastFahhhTime = 0;
 const playFahhhSound = () => {
-  if (typeof window === 'undefined') return;
-  
+  if (typeof window === "undefined") return;
+
   const now = Date.now();
   if (now - lastFahhhTime < 50) return; // 0.05 seconds cooldown
   lastFahhhTime = now;
-  
+
   if (!fahhAudio) {
-    fahhAudio = new Audio('/fahh.mp3');
+    fahhAudio = new Audio("/fahh.mp3");
   }
-  
+
   // Clone the node so rapid deletions overlap wildly instead of cutting off
   const overlapNode = fahhAudio.cloneNode();
-  overlapNode.play().catch(e => console.error('Audio playback blocked or file missing: ', e));
+  overlapNode.play().catch((e) => console.error("Audio playback blocked or file missing: ", e));
 };
 
 // Track accumulated characters at the bottom with physics
@@ -58,28 +58,28 @@ const updatePhysics = () => {
     for (let j = i + 1; j < fallingChars.length; j++) {
       const charA = fallingChars[i];
       const charB = fallingChars[j];
-      
+
       const dx = charB.x - charA.x;
       const dy = charB.y - charA.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       const minDistance = charRadius * 2;
-      
+
       if (distance < minDistance) {
         // Collision detected - push them apart
         const angle = Math.atan2(dy, dx);
         const sin = Math.sin(angle);
         const cos = Math.cos(angle);
-        
+
         // Push them apart
         const overlap = minDistance - distance;
         const pushX = (overlap / 2) * cos;
         const pushY = (overlap / 2) * sin;
-        
+
         charA.x -= pushX;
         charA.y -= pushY;
         charB.x += pushX;
         charB.y += pushY;
-        
+
         // Exchange velocities (simplified collision response)
         const tempVx = charA.vx;
         const tempVy = charA.vy;
@@ -96,7 +96,7 @@ const updatePhysics = () => {
 
     // Apply gravity
     charObj.vy += gravity;
-    
+
     // Update position
     charObj.y += charObj.vy;
     charObj.x += charObj.vx;
@@ -144,61 +144,62 @@ const updatePhysics = () => {
 };
 
 const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   if (!oldStr || !newStr) return;
-  
+
   // Calculate which exact letters were deleted
   let start = 0;
   while (start < oldStr.length && start < newStr.length && oldStr[start] === newStr[start]) start++;
   let endOld = oldStr.length - 1;
   let endNew = newStr.length - 1;
   while (endOld >= start && endNew >= start && oldStr[endOld] === newStr[endNew]) {
-    endOld--; endNew--;
+    endOld--;
+    endNew--;
   }
-  
+
   const deleted = oldStr.slice(start, endOld + 1);
   if (!deleted) return;
-  
+
   // Use cursor coordinates from editor, or fall back to center
   let startX = window.innerWidth / 2;
   let startY = window.innerHeight / 3;
-  
+
   if (cursorCoords && cursorCoords.top !== undefined && cursorCoords.left !== undefined) {
     startX = cursorCoords.left;
     startY = cursorCoords.top;
   }
-  
+
   // Limit to 50 particles max to prevent lagging on huge file deletions
-  const charsToSpawn = deleted.replace(/\s/g, '').split('').slice(0, 50);
-  
+  const charsToSpawn = deleted.replace(/\s/g, "").split("").slice(0, 50);
+
   charsToSpawn.forEach((char, i) => {
     setTimeout(() => {
-      const el = document.createElement('div');
+      const el = document.createElement("div");
       el.innerText = char;
-      el.style.position = 'fixed';
+      el.style.position = "fixed";
       el.style.fontSize = `${Math.random() * 24 + 16}px`;
-      el.style.fontWeight = '900';
-      el.style.color = '#333333';
-      el.style.zIndex = '99999';
-      el.style.pointerEvents = 'none';
-      el.style.fontFamily = 'monospace';
-      el.style.textShadow = '0px 2px 4px rgba(0,0,0,0.3)';
-      
+      el.style.fontWeight = "900";
+      el.style.color = "#333333";
+      el.style.zIndex = "99999";
+      el.style.pointerEvents = "none";
+      el.style.fontFamily = "monospace";
+      el.style.textShadow = "0px 2px 4px rgba(0,0,0,0.3)";
+
       const offsetX = startX + (Math.random() - 0.5) * 40;
       const offsetY = startY + (Math.random() - 0.5) * 40;
-      
+
       const charObj = {
         el,
         x: offsetX,
         y: offsetY,
         vx: (Math.random() - 0.5) * 300,
         vy: (Math.random() - 0.5) * 50, // Initial slight upward/downward velocity
-        settling: false
+        settling: false,
       };
 
       el.style.left = `${charObj.x}px`;
       el.style.top = `${charObj.y}px`;
-      
+
       document.body.appendChild(el);
       fallingChars.push(charObj);
 
@@ -211,19 +212,27 @@ const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
 };
 
 let isDeletingKey = false;
-if (typeof window !== 'undefined') {
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-      isDeletingKey = true;
-    } else {
-      isDeletingKey = false;
-    }
-  }, true);
-  window.addEventListener('keyup', (e) => {
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-      isDeletingKey = false;
-    }
-  }, true);
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "Backspace" || e.key === "Delete") {
+        isDeletingKey = true;
+      } else {
+        isDeletingKey = false;
+      }
+    },
+    true,
+  );
+  window.addEventListener(
+    "keyup",
+    (e) => {
+      if (e.key === "Backspace" || e.key === "Delete") {
+        isDeletingKey = false;
+      }
+    },
+    true,
+  );
 }
 
 export default function Editor() {
@@ -246,9 +255,9 @@ export default function Editor() {
         </head>
         <body>
           ${html}
-          ${eruda}
-          <script>${js}</script>
-        </body>
+          </body>
+        ${eruda}
+        <script>${js}</script>
       </html>
     `;
   }, [html, css, js]);
@@ -283,13 +292,13 @@ export default function Editor() {
 let capturedPointerId;
 function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
   const { activeId } = useSidebar();
-  
-  // Use persistent mutable refs to escape stale React closures 
+
+  // Use persistent mutable refs to escape stale React closures
   // trapped inside MonacoEditor's memoized onChange bindings
   const htmlRef = useRef(html);
   const cssRef = useRef(css);
   const jsRef = useRef(js);
-  
+
   useEffect(() => {
     htmlRef.current = html;
     cssRef.current = css;
@@ -345,37 +354,52 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                   <SplitterLayout vertical primaryIndex={0} percentage primaryInitialSize={33} secondaryInitialSize={66}>
                     <div className="flex h-full flex-col bg-white">
                       <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
-                      <MonacoEditor language="html" value={html} onChange={(v, cursorCoords) => {
-                        if (isDeletingKey && v.replace(/\s/g, '').length < htmlRef.current.replace(/\s/g, '').length) {
-                          playFahhhSound();
-                          spawnFallingLetters(htmlRef.current, v, cursorCoords);
-                        }
-                        htmlRef.current = v; // Sync ref instantly to avoid missed multi-stroke cascades
-                        setHtml(v);
-                      }} theme="vs" />
+                      <MonacoEditor
+                        language="html"
+                        value={html}
+                        onChange={(v, cursorCoords) => {
+                          if (isDeletingKey && v.replace(/\s/g, "").length < htmlRef.current.replace(/\s/g, "").length) {
+                            playFahhhSound();
+                            spawnFallingLetters(htmlRef.current, v, cursorCoords);
+                          }
+                          htmlRef.current = v; // Sync ref instantly to avoid missed multi-stroke cascades
+                          setHtml(v);
+                        }}
+                        theme="vs"
+                      />
                     </div>
                     <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={(window?.innerHeight ?? 0) / 3}>
                       <div className="flex h-full flex-col bg-white">
                         <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
-                        <MonacoEditor language="css" value={css} onChange={(v, cursorCoords) => {
-                          if (isDeletingKey && v.replace(/\s/g, '').length < cssRef.current.replace(/\s/g, '').length) {
-                            playFahhhSound();
-                            spawnFallingLetters(cssRef.current, v, cursorCoords);
-                          }
-                          cssRef.current = v;
-                          setCss(v);
-                        }} theme="vs" />
+                        <MonacoEditor
+                          language="css"
+                          value={css}
+                          onChange={(v, cursorCoords) => {
+                            if (isDeletingKey && v.replace(/\s/g, "").length < cssRef.current.replace(/\s/g, "").length) {
+                              playFahhhSound();
+                              spawnFallingLetters(cssRef.current, v, cursorCoords);
+                            }
+                            cssRef.current = v;
+                            setCss(v);
+                          }}
+                          theme="vs"
+                        />
                       </div>
                       <div className="flex h-full flex-col bg-white">
                         <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">JS</div>
-                        <MonacoEditor language="javascript" value={js} onChange={(v, cursorCoords) => {
-                          if (isDeletingKey && v.replace(/\s/g, '').length < jsRef.current.replace(/\s/g, '').length) {
-                            playFahhhSound();
-                            spawnFallingLetters(jsRef.current, v, cursorCoords);
-                          }
-                          jsRef.current = v;
-                          setJs(v);
-                        }} theme="vs" />
+                        <MonacoEditor
+                          language="javascript"
+                          value={js}
+                          onChange={(v, cursorCoords) => {
+                            if (isDeletingKey && v.replace(/\s/g, "").length < jsRef.current.replace(/\s/g, "").length) {
+                              playFahhhSound();
+                              spawnFallingLetters(jsRef.current, v, cursorCoords);
+                            }
+                            jsRef.current = v;
+                            setJs(v);
+                          }}
+                          theme="vs"
+                        />
                       </div>
                     </SplitterLayout>
                   </SplitterLayout>
