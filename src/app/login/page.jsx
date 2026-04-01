@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { pipeline, env } from '@huggingface/transformers';
 
 // Tell the library to ignore local file system logic to work properly in Next.js browser router
@@ -87,6 +88,7 @@ const cropCanvasToDrawing = (canvas) => {
 };
 
 export default function Login() {
+  const router = useRouter();
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
@@ -207,7 +209,10 @@ export default function Login() {
                       distance <= 10;
       
       if (isMatch && password === 'jeffieissilly') {
-        setStatusMessage(`Login successful! Detected: ${predictedText || 'Jeffiehu@gmail.com'}`);
+        setStatusMessage(`Login successful! Redirecting to editor...`);
+        setTimeout(() => {
+          router.push('/editor');
+        }, 1200);
       } else if (!isMatch) {
         setStatusMessage(`Login failed. Detected handwriting: "${predictedText}". Only true Jeffs permitted.`);
       } else {
