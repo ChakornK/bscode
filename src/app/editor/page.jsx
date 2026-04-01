@@ -40,7 +40,7 @@ export default function Editor() {
 
   return (
     <EditorLayout>
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex w-screen flex-1 overflow-hidden">
         <SidebarProvider
           initialItems={editorTabs.map((tab) => ({
             id: tab.id,
@@ -111,7 +111,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                       <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
                       <MonacoEditor language="html" value={html} onChange={setHtml} theme="vs" />
                     </div>
-                    <SplitterLayout vertical primaryIndex={0}>
+                    <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={window.innerHeight / 3}>
                       <div className="flex h-full flex-col bg-white">
                         <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
                         <MonacoEditor language="css" value={css} onChange={setCss} theme="vs" />
