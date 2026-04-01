@@ -1,19 +1,26 @@
 "use client";
 
+import "react-splitter-layout/lib/index.css";
 import { EditorLayout } from "@/components/editor/EditorLayout";
 import { ActivityBar, SidebarProvider, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
 import MonacoEditor from "@/components/editor/MonacoEditor";
 import { useEffect, useMemo, useState } from "react";
-import { MdOutlineSlowMotionVideo } from "react-icons/md";
-import { PiFlask } from "react-icons/pi";
-import SplitterLayout from "react-splitter-layout";
-import "react-splitter-layout/lib/index.css";
+import { MdOutlineChat, MdOutlineSlowMotionVideo } from "react-icons/md";
 import BrainRotVideos from "../components/BrainRotVideos";
+import ChatPanel from "@/components/ChatPanel";
+import dynamic from "next/dynamic";
+
+const SplitterLayout = dynamic(() => import("react-splitter-layout"), { ssr: false });
 
 function BrainRotTab() {
-  const {activeId} = useSidebar();
-  return <BrainRotVideos isOpen={activeId === "brain-rot-video"} />
-};
+  const { activeId } = useSidebar();
+  return <BrainRotVideos isOpen={activeId === "brain-rot-video"} />;
+}
+
+const editorTabs = [
+  { id: "chat", title: "Chat", icon: MdOutlineChat, component: <ChatPanel /> },
+  { id: "brain-rot-video", title: "Brain Rot Video", icon: MdOutlineSlowMotionVideo, component: <BrainRotTab /> },
+];
 
 export default function Editor() {
   const [html, setHtml] = useState("<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>");
@@ -50,10 +57,6 @@ export default function Editor() {
     }, 250);
     return () => clearTimeout(timeout);
   }, [combinedCode]);
-
-  const editorTabs = [{ id: "test", title: "Test", icon: PiFlask, component: <div>Test</div> },
-    { id: "brain-rot-video", title: "Brain Rot Video", icon: MdOutlineSlowMotionVideo, component: <BrainRotTab/> },
-  ];
 
   return (
     <EditorLayout>
