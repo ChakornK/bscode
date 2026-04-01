@@ -20,6 +20,13 @@ export default function Editor() {
   const [css, setCss] = useState("h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }");
   const [js, setJs] = useState("console.log('Hello from JS!');");
 
+  const [eruda, setEruda] = useState("");
+  useEffect(() => {
+    fetch("https://cdn.jsdelivr.net/npm/eruda")
+      .then((res) => res.text())
+      .then((text) => setEruda(`<script>${text}\n;self.eruda.init({tool: ['console', 'elements'], useShadowDom: true, defaults: {theme: "Light"}});</script>`));
+  }, []);
+
   const combinedCode = useMemo(() => {
     return `
       <html>
@@ -28,6 +35,7 @@ export default function Editor() {
         </head>
         <body>
           ${html}
+          ${eruda}
           <script>${js}</script>
         </body>
       </html>
@@ -120,7 +128,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                       <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
                       <MonacoEditor language="html" value={html} onChange={setHtml} theme="vs" />
                     </div>
-                    <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={window.innerHeight / 3}>
+                    <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={(window?.innerHeight ?? 0) / 3}>
                       <div className="flex h-full flex-col bg-white">
                         <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
                         <MonacoEditor language="css" value={css} onChange={setCss} theme="vs" />
@@ -135,7 +143,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
               </div>
               <div className="flex h-full flex-col bg-white">
                 <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">Output</div>
-                <iframe srcDoc={srcDoc} title="output" sandbox="allow-scripts" width="100%" height="100%" className="bg-white" />
+                <iframe srcDoc={srcDoc} title="output" width="100%" height="100%" className="bg-white" />
               </div>
             </SplitterLayout>
           </EditorLayout.Main>
