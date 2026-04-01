@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server"
 
+const formatEditorContextBlock = (label, language, code) => {
+  const trimmedCode = code?.trim()
+
+  if (!trimmedCode) {
+    return null
+  }
+
+  return `${label}:\n\n\`\`\`${language}\n${trimmedCode}\n\`\`\``
+}
+
 export async function POST(request) {
   try {
-    const { messages } = await request.json()
+    const { messages, editorCode } = await request.json()
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
@@ -26,6 +36,23 @@ export async function POST(request) {
         role: message.role === "assistant" ? "model" : "user",
         parts: [{ text: String(message.content) }],
       }))
+
+    const editorContextParts = [
+      formatEditorContextBlock("HTML", "html", editorCode?.html),
+      formatEditorContextBlock("CSS", "css", editorCode?.css),
+      formatEditorContextBlock("JavaScript", "js", editorCode?.js),
+    ].filter(Boolean)
+
+    if (editorContextParts.length > 0) {
+      contents.unshift({
+        role: "user",
+        parts: [
+          {
+            text: `The current code from the Monaco editor is available below. Use it as context for the user's request and reference it when helpful:\n\n${editorContextParts.join("\n\n")}`,
+          },
+        ],
+      })
+    }
 
     if (contents.length === 0) {
       return NextResponse.json(

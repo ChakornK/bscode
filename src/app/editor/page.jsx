@@ -3,6 +3,7 @@
 import "react-splitter-layout/lib/index.css";
 import { EditorLayout } from "@/components/editor/EditorLayout";
 import { ActivityBar, SidebarProvider, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
+import { EditorCodeProvider } from "@/components/editor/EditorCodeContext";
 import MonacoEditor from "@/components/editor/MonacoEditor";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MdOutlineChat, MdOutlineSlowMotionVideo } from "react-icons/md";
@@ -273,17 +274,19 @@ export default function Editor() {
 
   return (
     <EditorLayout>
-      <div className="flex w-screen flex-1 overflow-hidden">
-        <SidebarProvider
-          initialItems={editorTabs.map((tab) => ({
-            id: tab.id,
-            icon: tab.icon,
-            title: tab.title,
-            component: tab.component,
-          }))}
-        >
-          <EditorContent html={html} setHtml={setHtml} css={css} setCss={setCss} js={js} setJs={setJs} srcDoc={srcDoc} />
-        </SidebarProvider>
+      <div className="flex flex-1 w-screen overflow-hidden">
+        <EditorCodeProvider value={{ html, css, js }}>
+          <SidebarProvider
+            initialItems={editorTabs.map((tab) => ({
+              id: tab.id,
+              icon: tab.icon,
+              title: tab.title,
+              component: tab.component,
+            }))}
+          >
+            <EditorContent html={html} setHtml={setHtml} css={css} setCss={setCss} js={js} setJs={setJs} srcDoc={srcDoc} />
+          </SidebarProvider>
+        </EditorCodeProvider>
       </div>
     </EditorLayout>
   );
@@ -349,11 +352,11 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
               onDragStart={setDocumentPointerCapture}
               onDragEnd={releaseDocumentPointerCapture}
             >
-              <div className="flex h-full flex-col">
+              <div className="flex flex-col h-full">
                 <div className="flex flex-1 overflow-hidden">
                   <SplitterLayout vertical primaryIndex={0} percentage primaryInitialSize={33} secondaryInitialSize={66}>
-                    <div className="flex h-full flex-col bg-white">
-                      <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
+                    <div className="flex flex-col bg-white h-full">
+                      <div className="flex items-center bg-neutral-50 px-4 h-9 font-bold text-[11px] text-neutral-500 uppercase shrink-0">HTML</div>
                       <MonacoEditor
                         language="html"
                         value={html}
@@ -369,8 +372,8 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                       />
                     </div>
                     <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={(window?.innerHeight ?? 0) / 3}>
-                      <div className="flex h-full flex-col bg-white">
-                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
+                      <div className="flex flex-col bg-white h-full">
+                        <div className="flex items-center bg-neutral-50 px-4 h-9 font-bold text-[11px] text-neutral-500 uppercase shrink-0">CSS</div>
                         <MonacoEditor
                           language="css"
                           value={css}
@@ -385,8 +388,8 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                           theme="vs"
                         />
                       </div>
-                      <div className="flex h-full flex-col bg-white">
-                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">JS</div>
+                      <div className="flex flex-col bg-white h-full">
+                        <div className="flex items-center bg-neutral-50 px-4 h-9 font-bold text-[11px] text-neutral-500 uppercase shrink-0">JS</div>
                         <MonacoEditor
                           language="javascript"
                           value={js}
@@ -405,8 +408,8 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                   </SplitterLayout>
                 </div>
               </div>
-              <div className="flex h-full flex-col bg-white">
-                <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">Output</div>
+              <div className="flex flex-col bg-white h-full">
+                <div className="flex items-center bg-neutral-50 px-4 h-9 font-bold text-[11px] text-neutral-500 uppercase shrink-0">Output</div>
                 <iframe srcDoc={srcDoc} title="output" width="100%" height="100%" className="bg-white" />
               </div>
             </SplitterLayout>
