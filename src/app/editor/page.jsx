@@ -2,16 +2,28 @@
 
 import "react-splitter-layout/lib/index.css";
 import { EditorLayout } from "@/components/editor/EditorLayout";
-import { ActivityBar, SidebarProvider, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
+import {
+  ActivityBar,
+  SidebarProvider,
+  SidebarView,
+  useSidebar,
+} from "@/components/editor/EditorSidebar";
 import { EditorCodeProvider } from "@/components/editor/EditorCodeContext";
 import MonacoEditor from "@/components/editor/MonacoEditor";
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { MdOutlineChat, MdOutlineSlowMotionVideo, MdOutlineTrain } from "react-icons/md";
+import {
+  MdOutlineChat,
+  MdOutlineSlowMotionVideo,
+  MdOutlineTrain,
+} from "react-icons/md";
 import BrainRotVideos from "../components/BrainRotVideos";
 import ChatPanel from "@/components/ChatPanel";
 import dynamic from "next/dynamic";
 
-const SplitterLayout = dynamic(() => import("react-splitter-layout"), { ssr: false });
+const SplitterLayout = dynamic(() => import("react-splitter-layout"), {
+  ssr: false,
+});
+const CAPTCHA_TEXT = "tung tung tung tung sahur";
 
 function BrainRotTab() {
   const { activeId } = useSidebar();
@@ -20,12 +32,22 @@ function BrainRotTab() {
 
 const editorTabs = [
   { id: "chat", title: "Chat", icon: MdOutlineChat, component: <ChatPanel /> },
-  { id: "brain-rot-video", title: "Brain Rot Video", icon: MdOutlineSlowMotionVideo, component: <BrainRotTab /> },
+  {
+    id: "brain-rot-video",
+    title: "Brain Rot Video",
+    icon: MdOutlineSlowMotionVideo,
+    component: <BrainRotTab />,
+  },
   {
     id: "subway-surfers",
     title: "Subway Surfers",
     icon: MdOutlineTrain,
-    component: <iframe className="h-full w-full" src="https://subwaygame.bitbucket.io/file" />,
+    component: (
+      <iframe
+        className="h-full w-full"
+        src="https://subwaygame.bitbucket.io/file"
+      />
+    ),
   },
 ];
 
@@ -44,7 +66,9 @@ const playFahhhSound = () => {
 
   // Clone the node so rapid deletions overlap wildly instead of cutting off
   const overlapNode = fahhAudio.cloneNode();
-  overlapNode.play().catch((e) => console.error("Audio playback blocked or file missing: ", e));
+  overlapNode
+    .play()
+    .catch((e) => console.error("Audio playback blocked or file missing: ", e));
 };
 
 // Track accumulated characters at the bottom with physics
@@ -156,10 +180,19 @@ const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
 
   // Calculate which exact letters were deleted
   let start = 0;
-  while (start < oldStr.length && start < newStr.length && oldStr[start] === newStr[start]) start++;
+  while (
+    start < oldStr.length &&
+    start < newStr.length &&
+    oldStr[start] === newStr[start]
+  )
+    start++;
   let endOld = oldStr.length - 1;
   let endNew = newStr.length - 1;
-  while (endOld >= start && endNew >= start && oldStr[endOld] === newStr[endNew]) {
+  while (
+    endOld >= start &&
+    endNew >= start &&
+    oldStr[endOld] === newStr[endNew]
+  ) {
     endOld--;
     endNew--;
   }
@@ -171,7 +204,11 @@ const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
   let startX = window.innerWidth / 2;
   let startY = window.innerHeight / 3;
 
-  if (cursorCoords && cursorCoords.top !== undefined && cursorCoords.left !== undefined) {
+  if (
+    cursorCoords &&
+    cursorCoords.top !== undefined &&
+    cursorCoords.left !== undefined
+  ) {
     startX = cursorCoords.left;
     startY = cursorCoords.top;
   }
@@ -229,7 +266,7 @@ if (typeof window !== "undefined") {
         isDeletingKey = false;
       }
     },
-    true,
+    true
   );
   window.addEventListener(
     "keyup",
@@ -238,20 +275,28 @@ if (typeof window !== "undefined") {
         isDeletingKey = false;
       }
     },
-    true,
+    true
   );
 }
 
 export default function Editor() {
-  const [html, setHtml] = useState("<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>");
-  const [css, setCss] = useState("h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }");
+  const [html, setHtml] = useState(
+    "<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>"
+  );
+  const [css, setCss] = useState(
+    "h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }"
+  );
   const [js, setJs] = useState("console.log('Hello from JS!');");
 
   const [eruda, setEruda] = useState("");
   useEffect(() => {
     fetch("https://cdn.jsdelivr.net/npm/eruda")
       .then((res) => res.text())
-      .then((text) => setEruda(`<script>${text}\n;self.eruda.init({tool: ['console', 'elements'], useShadowDom: true, defaults: {theme: "Light"}});</script>`));
+      .then((text) =>
+        setEruda(
+          `<script>${text}\n;self.eruda.init({tool: ['console', 'elements'], useShadowDom: true, defaults: {theme: "Light"}});</script>`
+        )
+      );
   }, []);
 
   const combinedCode = useMemo(() => {
@@ -290,7 +335,15 @@ export default function Editor() {
               component: tab.component,
             }))}
           >
-            <EditorContent html={html} setHtml={setHtml} css={css} setCss={setCss} js={js} setJs={setJs} srcDoc={srcDoc} />
+            <EditorContent
+              html={html}
+              setHtml={setHtml}
+              css={css}
+              setCss={setCss}
+              js={js}
+              setJs={setJs}
+              srcDoc={srcDoc}
+            />
           </SidebarProvider>
         </EditorCodeProvider>
       </div>
@@ -301,6 +354,21 @@ export default function Editor() {
 let capturedPointerId;
 function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
   const { activeId } = useSidebar();
+  const [errorCounts, setErrorCounts] = useState({
+    html: 0,
+    css: 0,
+    javascript: 0,
+  });
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaError, setCaptchaError] = useState("");
+  const [captchaSolved, setCaptchaSolved] = useState(false);
+  const previousTotalErrorCountRef = useRef(0);
+  const totalErrorCount = useMemo(
+    () => errorCounts.html + errorCounts.css + errorCounts.javascript,
+    [errorCounts]
+  );
+  const isBlocked = totalErrorCount >= 3 && !captchaSolved;
 
   // Use persistent mutable refs to escape stale React closures
   // trapped inside MonacoEditor's memoized onChange bindings
@@ -314,8 +382,47 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
     jsRef.current = js;
   }, [html, css, js]);
 
+  useEffect(() => {
+    if (totalErrorCount >= 3 && previousTotalErrorCountRef.current < 3) {
+      setCaptchaSolved(false);
+      setCaptchaInput("");
+      setCaptchaError("");
+      setShowErrorPopup(true);
+    }
+
+    if (totalErrorCount < 3) {
+      setShowErrorPopup(false);
+      setCaptchaSolved(false);
+      setCaptchaInput("");
+      setCaptchaError("");
+    }
+
+    previousTotalErrorCountRef.current = totalErrorCount;
+  }, [totalErrorCount]);
+
+  const updateLanguageErrorCount = (languageKey, count) => {
+    setErrorCounts((prev) => {
+      if (prev[languageKey] === count) return prev;
+      return { ...prev, [languageKey]: count };
+    });
+  };
+
+  const handleCaptchaSubmit = (e) => {
+    e.preventDefault();
+    if (captchaInput.trim().toLowerCase() === CAPTCHA_TEXT.toLowerCase()) {
+      setCaptchaSolved(true);
+      setCaptchaError("");
+      setShowErrorPopup(false);
+      return;
+    }
+    setCaptchaError("Incorrect text. Please try again.");
+  };
+
   const documentPointerMoveOnceListener = ({ pointerId }) => {
-    document.removeEventListener("pointermove", documentPointerMoveOnceListener);
+    document.removeEventListener(
+      "pointermove",
+      documentPointerMoveOnceListener
+    );
     capturedPointerId = pointerId;
     document.documentElement.setPointerCapture(capturedPointerId);
   };
@@ -329,7 +436,10 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
   };
   useEffect(() => {
     return () => {
-      document.removeEventListener("pointermove", documentPointerMoveOnceListener);
+      document.removeEventListener(
+        "pointermove",
+        documentPointerMoveOnceListener
+      );
       releaseDocumentPointerCapture();
     };
   }, []);
@@ -341,7 +451,12 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
       </EditorLayout.ActivityBar>
 
       <div className="relative grow">
-        <SplitterLayout horizontal primaryIndex={1} secondaryInitialSize={240} secondaryMinSize={180}>
+        <SplitterLayout
+          horizontal
+          primaryIndex={1}
+          secondaryInitialSize={240}
+          secondaryMinSize={180}
+        >
           {activeId && (
             <EditorLayout.Sidebar>
               <SidebarView />
@@ -360,54 +475,109 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
             >
               <div className="flex h-full flex-col">
                 <div className="flex flex-1 overflow-hidden">
-                  <SplitterLayout vertical primaryIndex={0} percentage primaryInitialSize={33} secondaryInitialSize={66}>
+                  <SplitterLayout
+                    vertical
+                    primaryIndex={0}
+                    percentage
+                    primaryInitialSize={33}
+                    secondaryInitialSize={66}
+                  >
                     <div className="flex h-full flex-col bg-white">
-                      <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
+                      <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">
+                        HTML
+                      </div>
                       <MonacoEditor
                         language="html"
                         value={html}
                         onChange={(v, cursorCoords) => {
-                          if (isDeletingKey && v.replace(/\s/g, "").length < htmlRef.current.replace(/\s/g, "").length) {
+                          if (
+                            isDeletingKey &&
+                            v.replace(/\s/g, "").length <
+                              htmlRef.current.replace(/\s/g, "").length
+                          ) {
                             playFahhhSound();
-                            spawnFallingLetters(htmlRef.current, v, cursorCoords);
+                            spawnFallingLetters(
+                              htmlRef.current,
+                              v,
+                              cursorCoords
+                            );
                           }
                           htmlRef.current = v; // Sync ref instantly to avoid missed multi-stroke cascades
                           setHtml(v);
                         }}
                         theme="vs"
+                        totalErrorCount={totalErrorCount}
+                        isBlocked={isBlocked}
+                        onErrorCountChange={(count) =>
+                          updateLanguageErrorCount("html", count)
+                        }
                       />
                     </div>
-                    <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={(window?.innerHeight ?? 0) / 3}>
+                    <SplitterLayout
+                      vertical
+                      primaryIndex={0}
+                      secondaryInitialSize={(window?.innerHeight ?? 0) / 3}
+                    >
                       <div className="flex h-full flex-col bg-white">
-                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
+                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">
+                          CSS
+                        </div>
                         <MonacoEditor
                           language="css"
                           value={css}
                           onChange={(v, cursorCoords) => {
-                            if (isDeletingKey && v.replace(/\s/g, "").length < cssRef.current.replace(/\s/g, "").length) {
+                            if (
+                              isDeletingKey &&
+                              v.replace(/\s/g, "").length <
+                                cssRef.current.replace(/\s/g, "").length
+                            ) {
                               playFahhhSound();
-                              spawnFallingLetters(cssRef.current, v, cursorCoords);
+                              spawnFallingLetters(
+                                cssRef.current,
+                                v,
+                                cursorCoords
+                              );
                             }
                             cssRef.current = v;
                             setCss(v);
                           }}
                           theme="vs"
+                          totalErrorCount={totalErrorCount}
+                          isBlocked={isBlocked}
+                          onErrorCountChange={(count) =>
+                            updateLanguageErrorCount("css", count)
+                          }
                         />
                       </div>
                       <div className="flex h-full flex-col bg-white">
-                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">JS</div>
+                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">
+                          JS
+                        </div>
                         <MonacoEditor
                           language="javascript"
                           value={js}
                           onChange={(v, cursorCoords) => {
-                            if (isDeletingKey && v.replace(/\s/g, "").length < jsRef.current.replace(/\s/g, "").length) {
+                            if (
+                              isDeletingKey &&
+                              v.replace(/\s/g, "").length <
+                                jsRef.current.replace(/\s/g, "").length
+                            ) {
                               playFahhhSound();
-                              spawnFallingLetters(jsRef.current, v, cursorCoords);
+                              spawnFallingLetters(
+                                jsRef.current,
+                                v,
+                                cursorCoords
+                              );
                             }
                             jsRef.current = v;
                             setJs(v);
                           }}
                           theme="vs"
+                          totalErrorCount={totalErrorCount}
+                          isBlocked={isBlocked}
+                          onErrorCountChange={(count) =>
+                            updateLanguageErrorCount("javascript", count)
+                          }
                         />
                       </div>
                     </SplitterLayout>
@@ -415,10 +585,77 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                 </div>
               </div>
               <div className="flex h-full flex-col bg-white">
-                <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">Output</div>
-                <iframe srcDoc={srcDoc} title="output" width="100%" height="100%" className="bg-white" />
+                <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">
+                  Output
+                </div>
+                <iframe
+                  srcDoc={srcDoc}
+                  title="output"
+                  width="100%"
+                  height="100%"
+                  className="bg-white"
+                />
               </div>
             </SplitterLayout>
+
+            <div className="absolute bottom-0 left-0 right-0 z-20 flex h-9 items-center justify-between border-t border-neutral-200 bg-neutral-50 px-4 text-xs font-semibold">
+              <span className="text-neutral-700">
+                Combined Errors (HTML + CSS + JS)
+              </span>
+              <span
+                className={
+                  totalErrorCount >= 3 ? "text-red-600" : "text-neutral-700"
+                }
+              >
+                {totalErrorCount}
+              </span>
+            </div>
+
+            {showErrorPopup && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 p-4">
+                <form
+                  onSubmit={handleCaptchaSubmit}
+                  className="w-full max-w-sm rounded-md border border-red-200 bg-red-50 p-4 shadow-lg"
+                >
+                  <div className="mb-2 text-sm font-semibold text-red-700">
+                    ts code is so ass twin 🥀 prove ur human to continue writing
+                    ass code or use llm
+                  </div>
+                  <div className="mb-3 text-xs text-red-700">
+                    Combined HTML/CSS/JS errors: {totalErrorCount}.
+                  </div>
+
+                  <img
+                    src="/tung.jpg"
+                    alt="Captcha placeholder"
+                    className="mb-3 h-40 w-full rounded border border-red-200 bg-white object-contain"
+                  />
+
+                  <input
+                    value={captchaInput}
+                    onChange={(e) => setCaptchaInput(e.target.value)}
+                    className="w-full rounded border border-red-300 bg-white px-2 py-1 text-sm text-neutral-900 outline-none focus:border-red-500"
+                    placeholder="Enter captcha answer"
+                    autoFocus
+                  />
+
+                  {captchaError && (
+                    <div className="mt-2 text-xs font-medium text-red-700">
+                      {captchaError}
+                    </div>
+                  )}
+
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-red-700"
+                      type="submit"
+                    >
+                      Verify & Continue
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </EditorLayout.Main>
         </SplitterLayout>
       </div>
