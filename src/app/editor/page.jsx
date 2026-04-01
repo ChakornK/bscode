@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import SplitterLayout from "react-splitter-layout";
 import "react-splitter-layout/lib/index.css";
 import { PiSparkle } from "react-icons/pi";
 import { EditorLayout } from "@/components/editor/EditorLayout";
 import { SidebarProvider, ActivityBar, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
 import MonacoEditor from "@/components/editor/MonacoEditor";
 import ChatPanel from "@/components/ChatPanel";
+import dynamic from "next/dynamic";
+
+const SplitterLayout = dynamic(() => import("react-splitter-layout"), { ssr: false });
 
 const editorTabs = [{ id: "chat", title: "Chat", icon: PiSparkle, component: <ChatPanel /> }];
 
