@@ -3,12 +3,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import SplitterLayout from "react-splitter-layout";
 import "react-splitter-layout/lib/index.css";
-import { PiFlask } from "react-icons/pi";
+import { PiSparkle } from "react-icons/pi";
 import { EditorLayout } from "@/components/editor/EditorLayout";
 import { SidebarProvider, ActivityBar, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
 import MonacoEditor from "@/components/editor/MonacoEditor";
+import ChatPanel from "@/components/ChatPanel";
 
-const editorTabs = [{ id: "test", title: "Test", icon: PiFlask, component: <div>Test</div> }];
+const editorTabs = [{ id: "chat", title: "Chat", icon: PiSparkle, component: <ChatPanel /> }];
 
 export default function Editor() {
   const [html, setHtml] = useState("<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>");

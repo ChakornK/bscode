@@ -1,17 +1,10 @@
-"use client"
+"use client";
 
-import {
-  ChatContainerContent,
-  ChatContainerRoot,
-} from "@/components/prompt-kit/chat-container"
-import { Markdown } from "@/components/prompt-kit/markdown"
-import {
-  Message,
-  MessageAvatar,
-  MessageContent,
-} from "@/components/prompt-kit/message"
-import { Button } from "@/components/prompt-kit/button"
-import { useEffect, useRef, useState } from "react"
+import { ChatContainerContent, ChatContainerRoot } from "@/components/prompt-kit/chat-container";
+import { Markdown } from "@/components/prompt-kit/markdown";
+import { Message, MessageAvatar, MessageContent } from "@/components/prompt-kit/message";
+import { Button } from "@/components/prompt-kit/button";
+import { useEffect, useRef, useState } from "react";
 
 export default function ChatPanel() {
   const [messages, setMessages] = useState([
@@ -23,8 +16,7 @@ export default function ChatPanel() {
     {
       id: 2,
       role: "assistant",
-      content:
-        "Of course! I'd be happy to help with your coding question. What would you like to know?",
+      content: "Of course! I'd be happy to help with your coding question. What would you like to know?",
     },
     {
       id: 3,
@@ -37,20 +29,20 @@ export default function ChatPanel() {
       content:
         "Creating a responsive layout with CSS Grid is straightforward. Here's a basic example:\n\n```css\n.container {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));\n  gap: 1rem;\n}\n```\n\nThis creates a grid where:\n- Columns automatically fit as many as possible\n- Each column is at least 250px wide\n- Columns expand to fill available space\n- There's a 1rem gap between items\n\nWould you like me to explain more about how this works?",
     },
-  ])
+  ]);
 
-  const [isStreaming, setIsStreaming] = useState(false)
-  const streamIntervalRef = useRef(null)
-  const streamContentRef = useRef("")
+  const [isStreaming, setIsStreaming] = useState(false);
+  const streamIntervalRef = useRef(null);
+  const streamContentRef = useRef("");
 
   const streamResponse = () => {
-    if (isStreaming) return
+    if (isStreaming) return;
 
-    setIsStreaming(true)
+    setIsStreaming(true);
     const fullResponse =
-      "Yes, I'd be happy to explain more about CSS Grid! The `grid-template-columns` property defines the columns in your grid. The `repeat()` function is a shorthand that repeats a pattern. `auto-fit` will fit as many columns as possible in the available space. The `minmax()` function sets a minimum and maximum size for each column. This creates a responsive layout that automatically adjusts based on the available space without requiring media queries."
+      "Yes, I'd be happy to explain more about CSS Grid! The `grid-template-columns` property defines the columns in your grid. The `repeat()` function is a shorthand that repeats a pattern. `auto-fit` will fit as many columns as possible in the available space. The `minmax()` function sets a minimum and maximum size for each column. This creates a responsive layout that automatically adjusts based on the available space without requiring media queries.";
 
-    const newMessageId = messages.length + 1
+    const newMessageId = messages.length + 1;
     setMessages((prev) => [
       ...prev,
       {
@@ -58,42 +50,36 @@ export default function ChatPanel() {
         role: "assistant",
         content: "",
       },
-    ])
+    ]);
 
-    let charIndex = 0
-    streamContentRef.current = ""
+    let charIndex = 0;
+    streamContentRef.current = "";
 
     streamIntervalRef.current = setInterval(() => {
       if (charIndex < fullResponse.length) {
-        streamContentRef.current += fullResponse[charIndex]
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === newMessageId
-              ? { ...msg, content: streamContentRef.current }
-              : msg
-          )
-        )
-        charIndex++
+        streamContentRef.current += fullResponse[charIndex];
+        setMessages((prev) => prev.map((msg) => (msg.id === newMessageId ? { ...msg, content: streamContentRef.current } : msg)));
+        charIndex++;
       } else {
         if (streamIntervalRef.current) {
-          clearInterval(streamIntervalRef.current)
+          clearInterval(streamIntervalRef.current);
         }
-        setIsStreaming(false)
+        setIsStreaming(false);
       }
-    }, 30)
-  }
+    }, 30);
+  };
 
   useEffect(() => {
     return () => {
       if (streamIntervalRef.current) {
-        clearInterval(streamIntervalRef.current)
+        clearInterval(streamIntervalRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   return (
-    <div className="flex flex-col w-full h-100 overflow-hidden">
-      <div className="flex justify-between items-center p-3 border-b">
+    <div className="flex h-full w-full flex-col overflow-hidden">
+      <div className="flex items-center justify-between border-b p-3">
         <div />
         <Button size="sm" onClick={streamResponse} disabled={isStreaming}>
           {isStreaming ? "Streaming..." : "Show Streaming"}
@@ -103,38 +89,23 @@ export default function ChatPanel() {
       <ChatContainerRoot className="flex-1">
         <ChatContainerContent className="space-y-4 p-4">
           {messages.map((message) => {
-            const isAssistant = message.role === "assistant"
+            const isAssistant = message.role === "assistant";
 
             return (
-              <Message
-                key={message.id}
-                className={
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }
-              >
-                {isAssistant && (
-                  <MessageAvatar
-                    src="/avatars/ai.png"
-                    alt="AI Assistant"
-                    fallback="AI"
-                  />
-                )}
-                <div className="flex-1 max-w-[85%] sm:max-w-[75%]">
-                  {isAssistant ? (
-                    <div className="bg-secondary p-2 rounded-lg text-foreground prose">
+              <Message key={message.id} className={message.role === "user" ? "justify-end" : "justify-start"}>
+                {isAssistant && <MessageAvatar src="/avatars/ai.png" alt="AI Assistant" fallback="AI" />}
+                <div className="max-w-[85%] flex-1 sm:max-w-[75%]">
+                  {isAssistant ?
+                    <div className="bg-secondary text-foreground prose rounded-lg p-2">
                       <Markdown>{message.content}</Markdown>
                     </div>
-                  ) : (
-                    <MessageContent className="bg-primary text-primary-foreground">
-                      {message.content}
-                    </MessageContent>
-                  )}
+                  : <MessageContent className="bg-primary text-primary-foreground">{message.content}</MessageContent>}
                 </div>
               </Message>
-            )
+            );
           })}
         </ChatContainerContent>
       </ChatContainerRoot>
     </div>
-  )
+  );
 }
