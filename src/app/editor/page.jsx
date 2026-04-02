@@ -255,6 +255,161 @@ const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
   });
 };
 
+const getInsertedText = (oldStr, newStr) => {
+  if (!oldStr || !newStr || newStr.length <= oldStr.length) return "";
+
+  let start = 0;
+  while (
+    start < oldStr.length &&
+    start < newStr.length &&
+    oldStr[start] === newStr[start]
+  ) {
+    start++;
+  }
+
+  let endOld = oldStr.length - 1;
+  let endNew = newStr.length - 1;
+  while (
+    endOld >= start &&
+    endNew >= start &&
+    oldStr[endOld] === newStr[endNew]
+  ) {
+    endOld--;
+    endNew--;
+  }
+
+  return newStr.slice(start, endNew + 1);
+};
+
+const spawnBrainrotFlamePoof = (cursorCoords, typedText = "") => {
+  if (typeof window === "undefined") return;
+
+  let x = window.innerWidth / 2;
+  let y = window.innerHeight / 3;
+
+  if (
+    cursorCoords &&
+    cursorCoords.top !== undefined &&
+    cursorCoords.left !== undefined
+  ) {
+    x = cursorCoords.left;
+    y = cursorCoords.top;
+  }
+
+  const visibleTypedText = typedText || "?";
+  const bursts = Math.min(Math.max(visibleTypedText.length, 1), 3);
+
+  for (let i = 0; i < bursts; i += 1) {
+    const flame = document.createElement("div");
+    flame.textContent = "🔥";
+    flame.style.position = "fixed";
+    flame.style.left = `${x + (Math.random() - 0.5) * 14}px`;
+    flame.style.top = `${y + (Math.random() - 0.5) * 10}px`;
+    flame.style.fontSize = `${18 + Math.random() * 12}px`;
+    flame.style.zIndex = "99999";
+    flame.style.pointerEvents = "none";
+    flame.style.filter = "drop-shadow(0 0 8px rgba(255, 120, 0, 0.75))";
+    flame.style.transformOrigin = "center";
+
+    const poof = document.createElement("div");
+    const typedChar = visibleTypedText[Math.min(i, visibleTypedText.length - 1)];
+    poof.textContent = typedChar === " " ? "␠" : typedChar;
+    poof.style.position = "fixed";
+    poof.style.left = `${x + (Math.random() - 0.5) * 22}px`;
+    poof.style.top = `${y - 10 + (Math.random() - 0.5) * 14}px`;
+    poof.style.fontSize = `${11 + Math.random() * 5}px`;
+    poof.style.fontWeight = "900";
+    poof.style.letterSpacing = "0.08em";
+    poof.style.color = "rgba(255, 120, 30, 0.95)";
+    poof.style.textShadow = "0 0 8px rgba(255, 110, 0, 0.7)";
+    poof.style.zIndex = "99999";
+    poof.style.pointerEvents = "none";
+
+    document.body.appendChild(flame);
+    document.body.appendChild(poof);
+
+    flame.animate(
+      [
+        { transform: "translateY(0px) scale(0.75)", opacity: 0.95 },
+        { transform: "translateY(-10px) scale(1.05)", opacity: 0.85, offset: 0.4 },
+        { transform: "translateY(-26px) scale(0.25)", opacity: 0 },
+      ],
+      {
+        duration: 420 + Math.random() * 160,
+        easing: "cubic-bezier(0.2, 0.7, 0.2, 1)",
+        fill: "forwards",
+      }
+    );
+
+    const poofAnim = poof.animate(
+      [
+        { transform: "scale(0.7)", opacity: 0 },
+        { transform: "scale(1)", opacity: 1, offset: 0.15 },
+        { transform: "scale(1.22)", opacity: 0 },
+      ],
+      {
+        duration: 360 + Math.random() * 120,
+        easing: "ease-out",
+        fill: "forwards",
+      }
+    );
+
+    poofAnim.onfinish = () => {
+      flame.remove();
+      poof.remove();
+    };
+  }
+};
+
+const spawnWritingFireImage = (imagePaths) => {
+  if (typeof window === "undefined") return;
+  if (!Array.isArray(imagePaths) || imagePaths.length === 0) return;
+
+  const randomPath = imagePaths[Math.floor(Math.random() * imagePaths.length)];
+  if (!randomPath) return;
+
+  const image = document.createElement("img");
+  image.src = randomPath;
+  image.alt = "writing fire";
+  image.style.position = "fixed";
+  image.style.width = "10vw";
+  image.style.height = "auto";
+  image.style.maxWidth = "10vw";
+  image.style.zIndex = "99998";
+  image.style.pointerEvents = "none";
+  image.style.willChange = "transform, opacity";
+
+  const approxSize = window.innerWidth * 0.1;
+  const maxX = Math.max(window.innerWidth - approxSize, 0);
+  const maxY = Math.max(window.innerHeight - approxSize, 0);
+  const x = Math.random() * maxX;
+  const y = Math.random() * maxY;
+
+  image.style.left = `${x}px`;
+  image.style.top = `${y}px`;
+  image.style.opacity = "0";
+  image.style.transform = "scale(0.85)";
+
+  document.body.appendChild(image);
+
+  const anim = image.animate(
+    [
+      { opacity: 0, transform: "scale(0.85)" },
+      { opacity: 1, transform: "scale(1)", offset: 0.2 },
+      { opacity: 0, transform: "scale(1.08)" },
+    ],
+    {
+      duration: 950,
+      easing: "ease-out",
+      fill: "forwards",
+    }
+  );
+
+  anim.onfinish = () => {
+    image.remove();
+  };
+};
+
 let isDeletingKey = false;
 if (typeof window !== "undefined") {
   window.addEventListener(
@@ -363,6 +518,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaError, setCaptchaError] = useState("");
   const [captchaSolved, setCaptchaSolved] = useState(false);
+  const [writingFireImages, setWritingFireImages] = useState([]);
   const previousTotalErrorCountRef = useRef(0);
   const totalErrorCount = useMemo(
     () => errorCounts.html + errorCounts.css + errorCounts.javascript,
@@ -399,6 +555,29 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
 
     previousTotalErrorCountRef.current = totalErrorCount;
   }, [totalErrorCount]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetch("/api/writingfire")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load writingfire images");
+        return res.json();
+      })
+      .then((data) => {
+        if (ignore) return;
+        if (Array.isArray(data?.images)) {
+          setWritingFireImages(data.images);
+        }
+      })
+      .catch(() => {
+        if (!ignore) setWritingFireImages([]);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const updateLanguageErrorCount = (languageKey, count) => {
     setErrorCounts((prev) => {
@@ -490,17 +669,20 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                         language="html"
                         value={html}
                         onChange={(v, cursorCoords) => {
+                          const prev = htmlRef.current;
+                          const typedCharCount = Math.max(v.length - prev.length, 0);
+                          if (!isDeletingKey && typedCharCount > 0) {
+                            const typedText = getInsertedText(prev, v);
+                            spawnBrainrotFlamePoof(cursorCoords, typedText);
+                            spawnWritingFireImage(writingFireImages);
+                          }
                           if (
                             isDeletingKey &&
                             v.replace(/\s/g, "").length <
-                              htmlRef.current.replace(/\s/g, "").length
+                              prev.replace(/\s/g, "").length
                           ) {
                             playFahhhSound();
-                            spawnFallingLetters(
-                              htmlRef.current,
-                              v,
-                              cursorCoords
-                            );
+                            spawnFallingLetters(prev, v, cursorCoords);
                           }
                           htmlRef.current = v; // Sync ref instantly to avoid missed multi-stroke cascades
                           setHtml(v);
@@ -526,17 +708,20 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                           language="css"
                           value={css}
                           onChange={(v, cursorCoords) => {
+                            const prev = cssRef.current;
+                            const typedCharCount = Math.max(v.length - prev.length, 0);
+                            if (!isDeletingKey && typedCharCount > 0) {
+                              const typedText = getInsertedText(prev, v);
+                              spawnBrainrotFlamePoof(cursorCoords, typedText);
+                              spawnWritingFireImage(writingFireImages);
+                            }
                             if (
                               isDeletingKey &&
                               v.replace(/\s/g, "").length <
-                                cssRef.current.replace(/\s/g, "").length
+                                prev.replace(/\s/g, "").length
                             ) {
                               playFahhhSound();
-                              spawnFallingLetters(
-                                cssRef.current,
-                                v,
-                                cursorCoords
-                              );
+                              spawnFallingLetters(prev, v, cursorCoords);
                             }
                             cssRef.current = v;
                             setCss(v);
@@ -557,17 +742,20 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                           language="javascript"
                           value={js}
                           onChange={(v, cursorCoords) => {
+                            const prev = jsRef.current;
+                            const typedCharCount = Math.max(v.length - prev.length, 0);
+                            if (!isDeletingKey && typedCharCount > 0) {
+                              const typedText = getInsertedText(prev, v);
+                              spawnBrainrotFlamePoof(cursorCoords, typedText);
+                              spawnWritingFireImage(writingFireImages);
+                            }
                             if (
                               isDeletingKey &&
                               v.replace(/\s/g, "").length <
-                                jsRef.current.replace(/\s/g, "").length
+                                prev.replace(/\s/g, "").length
                             ) {
                               playFahhhSound();
-                              spawnFallingLetters(
-                                jsRef.current,
-                                v,
-                                cursorCoords
-                              );
+                              spawnFallingLetters(prev, v, cursorCoords);
                             }
                             jsRef.current = v;
                             setJs(v);
