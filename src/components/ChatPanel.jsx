@@ -1,60 +1,53 @@
 "use client";
 
-import {
-  ChatContainerContent,
-  ChatContainerRoot,
-} from "@/components/prompt-kit/chat-container"
-import { ChatInput } from "@/components/ChatInput"
-import { MessageBasic } from "@/components/Message"
-import { useEditorCode } from "@/components/editor/EditorCodeContext"
-import { useEffect, useRef, useState } from "react"
+import { ChatContainerContent, ChatContainerRoot } from "@/components/prompt-kit/chat-container";
+import { ChatInput } from "@/components/ChatInput";
+import { MessageBasic } from "@/components/Message";
+import { useEditorCode } from "@/components/editor/EditorCodeContext";
+import { useEffect, useRef, useState } from "react";
 
 export default function ChatPanel() {
-  const editorCode = useEditorCode()
-  const [messages, setMessages] = useState([])
+  const editorCode = useEditorCode();
+  const [messages, setMessages] = useState([]);
 
-  const [input, setInput] = useState("")
-  const [isStreaming, setIsStreaming] = useState(false)
-  const streamAbortControllerRef = useRef(null)
+  const [input, setInput] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const streamAbortControllerRef = useRef(null);
 
   const updateAssistantMessage = (messageId, updater) => {
-    setMessages((prev) =>
-      prev.map((message) =>
-        message.id === messageId ? updater(message) : message
-      )
-    )
-  }
+    setMessages((prev) => prev.map((message) => (message.id === messageId ? updater(message) : message)));
+  };
 
   const appendAssistantText = (messageId, chunk) => {
-    if (!chunk) return
+    if (!chunk) return;
 
     updateAssistantMessage(messageId, (message) => ({
       ...message,
       content: `${message.content || ""}${chunk}`,
-    }))
-  }
+    }));
+  };
 
   const readStream = async (response, messageId) => {
     if (!response.body) {
-      throw new Error("Missing streamed response body")
+      throw new Error("Missing streamed response body");
     }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ""
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
 
     try {
       while (true) {
-        const { done, value } = await reader.read()
+        const { done, value } = await reader.read();
 
         if (done) {
-          break
+          break;
         }
 
-        buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n")
+        buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
 
-        const events = buffer.split("\n\n")
-        buffer = events.pop() ?? ""
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
 
         for (const event of events) {
           const data = event
@@ -62,27 +55,24 @@ export default function ChatPanel() {
             .filter((line) => line.startsWith("data:"))
             .map((line) => line.replace(/^data:\s?/, ""))
             .join("\n")
-            .trim()
+            .trim();
 
           if (!data || data === "[DONE]") {
-            continue
+            continue;
           }
 
           try {
-            const parsed = JSON.parse(data)
-            const chunk =
-              parsed?.candidates?.[0]?.content?.parts
-                ?.map((part) => part?.text || "")
-                .join("") || ""
+            const parsed = JSON.parse(data);
+            const chunk = parsed?.candidates?.[0]?.content?.parts?.map((part) => part?.text || "").join("") || "";
 
-            appendAssistantText(messageId, chunk)
+            appendAssistantText(messageId, chunk);
           } catch {
-            continue
+            continue;
           }
         }
       }
 
-      const remaining = buffer.trim()
+      const remaining = buffer.trim();
 
       if (remaining.startsWith("data:")) {
         const data = remaining
@@ -90,42 +80,39 @@ export default function ChatPanel() {
           .filter((line) => line.startsWith("data:"))
           .map((line) => line.replace(/^data:\s?/, ""))
           .join("\n")
-          .trim()
+          .trim();
 
         if (data && data !== "[DONE]") {
           try {
-            const parsed = JSON.parse(data)
-            const chunk =
-              parsed?.candidates?.[0]?.content?.parts
-                ?.map((part) => part?.text || "")
-                .join("") || ""
+            const parsed = JSON.parse(data);
+            const chunk = parsed?.candidates?.[0]?.content?.parts?.map((part) => part?.text || "").join("") || "";
 
-            appendAssistantText(messageId, chunk)
+            appendAssistantText(messageId, chunk);
           } catch {
             // Ignore trailing partial event parse failures.
           }
         }
       }
     } finally {
-      reader.releaseLock()
+      reader.releaseLock();
     }
-  }
+  };
 
   const handleSubmit = async () => {
-    if (isStreaming) return
+    if (isStreaming) return;
 
-    const trimmedInput = input.trim()
+    const trimmedInput = input.trim();
 
-    if (!trimmedInput) return
+    if (!trimmedInput) return;
 
     const userMessage = {
       id: Date.now(),
       role: "user",
       content: trimmedInput,
-    }
-    const assistantMessageId = Date.now() + 1
+    };
+    const assistantMessageId = Date.now() + 1;
 
-    const nextMessages = [...messages, userMessage]
+    const nextMessages = [...messages, userMessage];
     setMessages((prev) => [
       ...prev,
       userMessage,
@@ -134,12 +121,12 @@ export default function ChatPanel() {
         role: "assistant",
         content: "",
       },
-    ])
-    setInput("")
-    setIsStreaming(true)
+    ]);
+    setInput("");
+    setIsStreaming(true);
 
-    const controller = new AbortController()
-    streamAbortControllerRef.current = controller
+    const controller = new AbortController();
+    streamAbortControllerRef.current = controller;
 
     try {
       const response = await fetch("/api/chat", {
@@ -155,83 +142,65 @@ export default function ChatPanel() {
           })),
           editorCode,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data?.error || "Failed to fetch Gemini response")
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || "Failed to fetch Gemini response");
       }
 
-      await readStream(response, assistantMessageId)
+      await readStream(response, assistantMessageId);
     } catch (error) {
-      const errorMessage =
-        error?.name === "AbortError"
-          ? "Generation stopped."
-          : `Error: ${error.message || "Unknown error"}`
+      const errorMessage = error?.name === "AbortError" ? "Generation stopped." : `Error: ${error.message || "Unknown error"}`;
 
       updateAssistantMessage(assistantMessageId, (message) => ({
         ...message,
         content: errorMessage,
-      }))
+      }));
     } finally {
       if (streamAbortControllerRef.current === controller) {
-        streamAbortControllerRef.current = null
+        streamAbortControllerRef.current = null;
       }
 
-      setIsStreaming(false)
+      setIsStreaming(false);
     }
-  }
+  };
 
   useEffect(() => {
     return () => {
       if (streamAbortControllerRef.current) {
-        streamAbortControllerRef.current.abort()
+        streamAbortControllerRef.current.abort();
       }
-    }
-  }, [])
+    };
+  }, []);
 
   return (
-    <div className="flex flex-col w-full h-full min-h-0 overflow-hidden">
-      <div className="flex justify-start items-center gap-2 p-3 border-b shrink-0">
-        <div className="text-muted-foreground text-sm">
-          {isStreaming ? "Streaming..." : "Ready"}
-        </div>
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
+      <div className="flex shrink-0 items-center justify-start gap-2 border-b p-3">
+        <div className="text-muted-foreground text-sm">{isStreaming ? "Streaming..." : "Ready"}</div>
         <div
-          className={`h-2.5 w-2.5 rounded-full ${
-            isStreaming ? "bg-orange-500" : "bg-green-500"
-          }`}
+          className={`h-2.5 w-2.5 rounded-full ${isStreaming ? "bg-orange-500" : "bg-green-500"}`}
           aria-label={isStreaming ? "Streaming status" : "Ready status"}
           role="status"
         />
       </div>
 
-      <ChatContainerRoot className="flex-1 min-h-0 overflow-y-auto">
-        <ChatContainerContent className={`space-y-4 p-4 min-h-full flex flex-col ${messages.length === 0 ? "justify-center" : ""}`}>
+      <ChatContainerRoot className="min-h-0 flex-1 overflow-y-auto">
+        <ChatContainerContent className={`flex min-h-full flex-col space-y-4 p-4 ${messages.length === 0 ? "justify-center" : ""}`}>
           {messages.length === 0 && (
-            <div className="flex justify-center items-center">
-              <p className="text-gray-400 text-lg text-center">We know you cant code without AI</p>
+            <div className="flex items-center justify-center">
+              <p className="text-center text-lg text-gray-400">We know you cant code without AI</p>
             </div>
           )}
           {messages.map((message) => {
-            return (
-              <MessageBasic
-                key={message.id}
-                role={message.role}
-                content={message.content}
-              />
-            )
+            return <MessageBasic key={message.id} role={message.role} content={message.content} />;
           })}
         </ChatContainerContent>
       </ChatContainerRoot>
 
-      <div className="bg-background p-3 border-t shrink-0">
-        <ChatInput
-          value={input}
-          onValueChange={setInput}
-          isLoading={isStreaming}
-          onSubmit={handleSubmit}
-        />
+      <div className="bg-background shrink-0 border-t p-3">
+        <ChatInput value={input} onValueChange={setInput} isLoading={isStreaming} onSubmit={handleSubmit} />
       </div>
     </div>
-  )
+  );
 }
