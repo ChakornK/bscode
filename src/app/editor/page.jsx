@@ -78,6 +78,79 @@ const friction = 0.98;
 const bounce = 0.6;
 const groundLevel = window.innerHeight - 30;
 const charRadius = 12; // Approximate collision radius for characters
+const igniteTimers = new Set();
+
+const igniteSettledChar = (charObj) => {
+  if (!charObj?.el || !charObj.el.isConnected) return;
+  if (charObj.onFire) return;
+  charObj.onFire = true;
+
+  charObj.el.style.transition = "color 1.6s ease, text-shadow 1.6s ease, filter 1.6s ease";
+  charObj.el.style.color = "#ff5a1f";
+  charObj.el.style.opacity = "0.28";
+  charObj.el.style.textShadow =
+    "0 0 8px rgba(255, 120, 0, 0.9), 0 0 18px rgba(255, 80, 0, 0.65), 0 2px 3px rgba(0,0,0,0.3)";
+  charObj.el.style.filter = "saturate(1.3)";
+
+  charObj.el.animate(
+    [
+      { transform: "translateY(0px) scale(1)", opacity: 1 },
+      { transform: "translateY(-1px) scale(1.02)", opacity: 0.95 },
+      { transform: "translateY(0px) scale(1)", opacity: 1 },
+    ],
+    {
+      duration: 850 + Math.random() * 350,
+      iterations: Infinity,
+      direction: "alternate",
+      easing: "ease-in-out",
+    }
+  );
+
+  const flame = document.createElement("div");
+  flame.textContent = "🔥";
+  flame.style.position = "fixed";
+  flame.style.pointerEvents = "none";
+  flame.style.zIndex = "100001";
+  flame.style.left = `${charObj.x + 8}px`;
+  flame.style.top = `${charObj.y - 2}px`;
+  flame.style.transform = "translate(-50%, -50%)";
+  flame.style.fontSize = `${42 + Math.random() * 22}px`;
+  flame.style.opacity = "0.55";
+  flame.style.transformOrigin = "bottom center";
+  flame.style.filter =
+    "drop-shadow(0 0 14px rgba(255, 120, 0, 0.95)) drop-shadow(0 0 26px rgba(255, 70, 0, 0.7))";
+
+  document.body.appendChild(flame);
+  charObj.flameEl = flame;
+
+  flame.animate(
+    [
+      { transform: "translateY(8px) scale(0.38)", opacity: 0.22 },
+      { transform: "translateY(-2px) scale(0.82)", opacity: 0.58, offset: 0.35 },
+      { transform: "translateY(-12px) scale(1.7)", opacity: 0.96, offset: 0.72 },
+      { transform: "translateY(-4px) scale(1.28)", opacity: 0.35 },
+    ],
+    {
+      duration: 980 + Math.random() * 320,
+      iterations: Infinity,
+      direction: "alternate",
+      easing: "cubic-bezier(0.2, 0.75, 0.2, 1)",
+    }
+  );
+};
+
+const scheduleIgniteSettledChar = (charObj) => {
+  if (!charObj || charObj.igniteScheduled || charObj.onFire) return;
+  charObj.igniteScheduled = true;
+  const igniteDelay = 900 + Math.random() * 2600;
+  const timerId = window.setTimeout(() => {
+    igniteTimers.delete(timerId);
+    if (!charObj?.el || !charObj.el.isConnected) return;
+    igniteSettledChar(charObj);
+  }, igniteDelay);
+  igniteTimers.add(timerId);
+  charObj.igniteTimerId = timerId;
+};
 
 let physicsAnimationId = null;
 
@@ -145,6 +218,7 @@ const updatePhysics = () => {
         charObj.vy = 0;
         charObj.vx = 0;
         charObj.settling = true;
+        scheduleIgniteSettledChar(charObj);
       } else {
         anyMoving = true;
       }
@@ -165,6 +239,11 @@ const updatePhysics = () => {
     // Update DOM position
     charObj.el.style.left = `${charObj.x}px`;
     charObj.el.style.top = `${charObj.y}px`;
+
+    if (charObj.flameEl) {
+      charObj.flameEl.style.left = `${charObj.x + 8}px`;
+      charObj.flameEl.style.top = `${charObj.y - 2}px`;
+    }
   });
 
   if (anyMoving) {
@@ -239,6 +318,10 @@ const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
         vx: (Math.random() - 0.5) * 300,
         vy: (Math.random() - 0.5) * 50, // Initial slight upward/downward velocity
         settling: false,
+        onFire: false,
+        igniteScheduled: false,
+        igniteTimerId: null,
+        flameEl: null,
       };
 
       el.style.left = `${charObj.x}px`;
@@ -501,6 +584,24 @@ export default function Editor() {
     }, 250);
     return () => clearTimeout(timeout);
   }, [combinedCode]);
+
+  useEffect(() => {
+    return () => {
+      if (physicsAnimationId) {
+        cancelAnimationFrame(physicsAnimationId);
+        physicsAnimationId = null;
+      }
+
+      igniteTimers.forEach((timerId) => clearTimeout(timerId));
+      igniteTimers.clear();
+
+      fallingChars.forEach((charObj) => {
+        charObj?.el?.remove?.();
+        charObj?.flameEl?.remove?.();
+      });
+      fallingChars.length = 0;
+    };
+  }, []);
 
   return (
     <EditorLayout>
