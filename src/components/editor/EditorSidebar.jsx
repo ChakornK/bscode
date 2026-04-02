@@ -35,11 +35,13 @@ export function ActivityBar() {
           key={item.id}
           onClick={() => setActiveId(activeId === item.id ? null : item.id)}
           className={`group relative cursor-pointer p-3 transition-colors duration-200 ${
-            activeId === item.id ? "text-neutral-900" : "text-neutral-700 hover:text-neutral-900"
+            activeId === item.id
+              ? "text-[#424242] dark:text-[#cccccc]"
+              : "text-[#616161] dark:text-[#858585] hover:text-[#424242] dark:hover:text-[#cccccc]"
           }`}
           title={item.title}
         >
-          {activeId === item.id && <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-neutral-900" />}
+          {activeId === item.id && <div className="absolute bottom-0 left-0 top-0 w-[2px] bg-[#424242] dark:bg-[#cccccc]" />}
           <div className="flex h-6 w-6 items-center justify-center">
             <item.icon size={24} />
           </div>
@@ -56,9 +58,9 @@ export function SidebarView() {
   if (!activeItem) return null;
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-[#f3f3f3] dark:bg-[#252526]">
       <div className="flex items-center justify-between px-4 py-3">
-        <h2 className="select-none text-[11px] font-bold uppercase tracking-wider text-neutral-500">{activeItem.title}</h2>
+        <h2 className="select-none text-[11px] font-bold uppercase tracking-wider text-[#616161] dark:text-[#bbbbbb]">{activeItem.title}</h2>
       </div>
       <div className="flex-1 overflow-hidden">{activeItem.component}</div>
     </div>

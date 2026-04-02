@@ -10,6 +10,7 @@ import {
 } from "@/components/editor/EditorSidebar";
 import { EditorCodeProvider } from "@/components/editor/EditorCodeContext";
 import MonacoEditor from "@/components/editor/MonacoEditor";
+import { ThemeProvider, useTheme } from "@/components/editor/ThemeContext";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   MdOutlineChat,
@@ -19,6 +20,7 @@ import {
 import BrainRotVideos from "../components/BrainRotVideos";
 import ChatPanel from "@/components/ChatPanel";
 import dynamic from "next/dynamic";
+import StatusBar from "@/components/editor/StatusBar";
 
 const SplitterLayout = dynamic(() => import("react-splitter-layout"), {
   ssr: false,
@@ -253,8 +255,8 @@ const updatePhysics = () => {
   }
 };
 
-const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
-  if (typeof window === "undefined") return;
+const spawnFallingLetters = (oldStr, newStr, cursorCoords, color = '#333333') => {
+  if (typeof window === 'undefined') return;
   if (!oldStr || !newStr) return;
 
   // Calculate which exact letters were deleted
@@ -301,13 +303,13 @@ const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
       el.innerText = char;
       el.style.position = "fixed";
       el.style.fontSize = `${Math.random() * 24 + 16}px`;
-      el.style.fontWeight = "900";
-      el.style.color = "#333333";
-      el.style.zIndex = "99999";
-      el.style.pointerEvents = "none";
-      el.style.fontFamily = "monospace";
-      el.style.textShadow = "0px 2px 4px rgba(0,0,0,0.3)";
-
+      el.style.fontWeight = '900';
+      el.style.color = color;
+      el.style.zIndex = '99999';
+      el.style.pointerEvents = 'none';
+      el.style.fontFamily = 'monospace';
+      el.style.textShadow = '0px 2px 4px rgba(0,0,0,0.3)';
+      
       const offsetX = startX + (Math.random() - 0.5) * 40;
       const offsetY = startY + (Math.random() - 0.5) * 40;
 
@@ -550,6 +552,9 @@ export default function Editor() {
   );
   const [js, setJs] = useState("console.log('Hello from JS!');");
 
+  const [cursorInfo, setCursorInfo] = useState({ lineNumber: 1, column: 1 });
+  const [activeLanguage, setActiveLanguage] = useState("html");
+
   const [eruda, setEruda] = useState("");
   useEffect(() => {
     fetch("https://cdn.jsdelivr.net/npm/eruda")
@@ -604,8 +609,26 @@ export default function Editor() {
   }, []);
 
   return (
+    <ThemeProvider>
     <EditorLayout>
       <div className="flex w-screen flex-1 overflow-hidden">
+        <SidebarProvider
+          initialItems={editorTabs.map((tab) => ({
+            id: tab.id,
+            icon: tab.icon,
+            title: tab.title,
+            component: tab.component,
+          }))}
+        >
+          <EditorContent
+            html={html} setHtml={setHtml}
+            css={css} setCss={setCss}
+            js={js} setJs={setJs}
+            srcDoc={srcDoc}
+            onCursorChange={setCursorInfo}
+            onActiveLanguageChange={setActiveLanguage}
+          />
+        </SidebarProvider>
         <EditorCodeProvider value={{ html, css, js }}>
           <SidebarProvider
             initialItems={editorTabs.map((tab) => ({
@@ -627,13 +650,21 @@ export default function Editor() {
           </SidebarProvider>
         </EditorCodeProvider>
       </div>
+      <EditorLayout.StatusBar>
+        <StatusBar cursorLine={cursorInfo.lineNumber} cursorColumn={cursorInfo.column} activeLanguage={activeLanguage} />
+      </EditorLayout.StatusBar>
     </EditorLayout>
+    </ThemeProvider>
   );
 }
 
 let capturedPointerId;
-function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
+function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursorChange, onActiveLanguageChange }) {
   const { activeId } = useSidebar();
+  const { theme } = useTheme();
+  const monacoTheme = theme === "dark" ? "vs-dark" : "vs";
+  
+  // Use persistent mutable refs to escape stale React closures 
   const [errorCounts, setErrorCounts] = useState({
     html: 0,
     css: 0,
@@ -897,17 +928,9 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                   </SplitterLayout>
                 </div>
               </div>
-              <div className="flex h-full flex-col bg-white">
-                <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">
-                  Output
-                </div>
-                <iframe
-                  srcDoc={srcDoc}
-                  title="output"
-                  width="100%"
-                  height="100%"
-                  className="bg-white"
-                />
+              <div className="flex h-full flex-col bg-white dark:bg-[#1e1e1e]">
+                <div className="flex h-9 shrink-0 items-center bg-[#ececec] dark:bg-[#2d2d2d] px-4 text-[11px] font-bold uppercase text-[#616161] dark:text-[#969696]">Output</div>
+                <iframe srcDoc={srcDoc} title="output" width="100%" height="100%" className="bg-white" />
               </div>
             </SplitterLayout>
 
