@@ -4,11 +4,13 @@ import "react-splitter-layout/lib/index.css";
 import { EditorLayout } from "@/components/editor/EditorLayout";
 import { ActivityBar, SidebarProvider, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
 import MonacoEditor from "@/components/editor/MonacoEditor";
+import { ThemeProvider, useTheme } from "@/components/editor/ThemeContext";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { MdOutlineChat, MdOutlineSlowMotionVideo } from "react-icons/md";
 import BrainRotVideos from "../components/BrainRotVideos";
 import ChatPanel from "@/components/ChatPanel";
 import dynamic from "next/dynamic";
+import StatusBar from "@/components/editor/StatusBar";
 
 const SplitterLayout = dynamic(() => import("react-splitter-layout"), { ssr: false });
 
@@ -143,7 +145,7 @@ const updatePhysics = () => {
   }
 };
 
-const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
+const spawnFallingLetters = (oldStr, newStr, cursorCoords, color = '#333333') => {
   if (typeof window === 'undefined') return;
   if (!oldStr || !newStr) return;
   
@@ -178,7 +180,7 @@ const spawnFallingLetters = (oldStr, newStr, cursorCoords) => {
       el.style.position = 'fixed';
       el.style.fontSize = `${Math.random() * 24 + 16}px`;
       el.style.fontWeight = '900';
-      el.style.color = '#333333';
+      el.style.color = color;
       el.style.zIndex = '99999';
       el.style.pointerEvents = 'none';
       el.style.fontFamily = 'monospace';
@@ -231,6 +233,9 @@ export default function Editor() {
   const [css, setCss] = useState("h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }");
   const [js, setJs] = useState("console.log('Hello from JS!');");
 
+  const [cursorInfo, setCursorInfo] = useState({ lineNumber: 1, column: 1 });
+  const [activeLanguage, setActiveLanguage] = useState("html");
+
   const [eruda, setEruda] = useState("");
   useEffect(() => {
     fetch("https://cdn.jsdelivr.net/npm/eruda")
@@ -263,6 +268,7 @@ export default function Editor() {
   }, [combinedCode]);
 
   return (
+    <ThemeProvider>
     <EditorLayout>
       <div className="flex w-screen flex-1 overflow-hidden">
         <SidebarProvider
@@ -273,16 +279,29 @@ export default function Editor() {
             component: tab.component,
           }))}
         >
-          <EditorContent html={html} setHtml={setHtml} css={css} setCss={setCss} js={js} setJs={setJs} srcDoc={srcDoc} />
+          <EditorContent
+            html={html} setHtml={setHtml}
+            css={css} setCss={setCss}
+            js={js} setJs={setJs}
+            srcDoc={srcDoc}
+            onCursorChange={setCursorInfo}
+            onActiveLanguageChange={setActiveLanguage}
+          />
         </SidebarProvider>
       </div>
+      <EditorLayout.StatusBar>
+        <StatusBar cursorLine={cursorInfo.lineNumber} cursorColumn={cursorInfo.column} activeLanguage={activeLanguage} />
+      </EditorLayout.StatusBar>
     </EditorLayout>
+    </ThemeProvider>
   );
 }
 
 let capturedPointerId;
-function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
+function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursorChange, onActiveLanguageChange }) {
   const { activeId } = useSidebar();
+  const { theme } = useTheme();
+  const monacoTheme = theme === "dark" ? "vs-dark" : "vs";
   
   // Use persistent mutable refs to escape stale React closures 
   // trapped inside MonacoEditor's memoized onChange bindings
@@ -343,46 +362,46 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
               <div className="flex h-full flex-col">
                 <div className="flex flex-1 overflow-hidden">
                   <SplitterLayout vertical primaryIndex={0} percentage primaryInitialSize={33} secondaryInitialSize={66}>
-                    <div className="flex h-full flex-col bg-white">
-                      <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
+                    <div className="flex h-full flex-col bg-white dark:bg-[#1e1e1e]">
+                      <div className="flex h-9 shrink-0 items-center bg-[#ececec] dark:bg-[#2d2d2d] px-4 text-[11px] font-bold uppercase text-[#616161] dark:text-[#969696]">HTML</div>
                       <MonacoEditor language="html" value={html} onChange={(v, cursorCoords) => {
                         if (isDeletingKey && v.replace(/\s/g, '').length < htmlRef.current.replace(/\s/g, '').length) {
                           playFahhhSound();
-                          spawnFallingLetters(htmlRef.current, v, cursorCoords);
+                          spawnFallingLetters(htmlRef.current, v, cursorCoords, theme === 'dark' ? '#cccccc' : '#333333');
                         }
                         htmlRef.current = v; // Sync ref instantly to avoid missed multi-stroke cascades
                         setHtml(v);
-                      }} theme="vs" />
+                      }} theme={monacoTheme} onCursorChange={onCursorChange} onEditorFocus={() => onActiveLanguageChange("html")} />
                     </div>
                     <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={(window?.innerHeight ?? 0) / 3}>
-                      <div className="flex h-full flex-col bg-white">
-                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
+                      <div className="flex h-full flex-col bg-white dark:bg-[#1e1e1e]">
+                        <div className="flex h-9 shrink-0 items-center bg-[#ececec] dark:bg-[#2d2d2d] px-4 text-[11px] font-bold uppercase text-[#616161] dark:text-[#969696]">CSS</div>
                         <MonacoEditor language="css" value={css} onChange={(v, cursorCoords) => {
                           if (isDeletingKey && v.replace(/\s/g, '').length < cssRef.current.replace(/\s/g, '').length) {
                             playFahhhSound();
-                            spawnFallingLetters(cssRef.current, v, cursorCoords);
+                            spawnFallingLetters(cssRef.current, v, cursorCoords, theme === 'dark' ? '#cccccc' : '#333333');
                           }
                           cssRef.current = v;
                           setCss(v);
-                        }} theme="vs" />
+                        }} theme={monacoTheme} onCursorChange={onCursorChange} onEditorFocus={() => onActiveLanguageChange("css")} />
                       </div>
-                      <div className="flex h-full flex-col bg-white">
-                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">JS</div>
+                      <div className="flex h-full flex-col bg-white dark:bg-[#1e1e1e]">
+                        <div className="flex h-9 shrink-0 items-center bg-[#ececec] dark:bg-[#2d2d2d] px-4 text-[11px] font-bold uppercase text-[#616161] dark:text-[#969696]">JS</div>
                         <MonacoEditor language="javascript" value={js} onChange={(v, cursorCoords) => {
                           if (isDeletingKey && v.replace(/\s/g, '').length < jsRef.current.replace(/\s/g, '').length) {
                             playFahhhSound();
-                            spawnFallingLetters(jsRef.current, v, cursorCoords);
+                            spawnFallingLetters(jsRef.current, v, cursorCoords, theme === 'dark' ? '#cccccc' : '#333333');
                           }
                           jsRef.current = v;
                           setJs(v);
-                        }} theme="vs" />
+                        }} theme={monacoTheme} onCursorChange={onCursorChange} onEditorFocus={() => onActiveLanguageChange("javascript")} />
                       </div>
                     </SplitterLayout>
                   </SplitterLayout>
                 </div>
               </div>
-              <div className="flex h-full flex-col bg-white">
-                <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">Output</div>
+              <div className="flex h-full flex-col bg-white dark:bg-[#1e1e1e]">
+                <div className="flex h-9 shrink-0 items-center bg-[#ececec] dark:bg-[#2d2d2d] px-4 text-[11px] font-bold uppercase text-[#616161] dark:text-[#969696]">Output</div>
                 <iframe srcDoc={srcDoc} title="output" width="100%" height="100%" className="bg-white" />
               </div>
             </SplitterLayout>

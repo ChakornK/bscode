@@ -83,37 +83,38 @@
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    /* VS Code Dark theme colors */
+    --background: #1e1e1e;
+    --foreground: #cccccc;
+    --card: #252526;
+    --card-foreground: #cccccc;
+    --popover: #252526;
+    --popover-foreground: #cccccc;
+    --primary: #cccccc;
+    --primary-foreground: #1e1e1e;
+    --secondary: #2d2d2d;
+    --secondary-foreground: #cccccc;
+    --muted: #2d2d2d;
+    --muted-foreground: #969696;
+    --accent: #2d2d2d;
+    --accent-foreground: #cccccc;
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --border: #414141;
+    --input: #3c3c3c;
+    --ring: #007acc;
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --sidebar: #252526;
+    --sidebar-foreground: #cccccc;
+    --sidebar-primary: #007acc;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #2d2d2d;
+    --sidebar-accent-foreground: #cccccc;
+    --sidebar-border: #414141;
+    --sidebar-ring: #007acc;
 }
 
 @layer base {
@@ -148,6 +149,14 @@
   background-color: #007acc !important;
 }
 
+.dark .splitter-layout .layout-splitter {
+  background-color: #414141 !important;
+}
+
+.dark .splitter-layout .layout-splitter:hover {
+  background-color: #007acc !important;
+}
+
 .splitter-layout.splitter-layout-vertical > .layout-splitter {
   height: 4px !important;
   width: 100% !important;
@@ -178,6 +187,19 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #999999;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #424242;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #606060;
   border: 3px solid transparent;
   background-clip: content-box;
 }

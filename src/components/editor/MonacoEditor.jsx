@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 
-export default function MonacoEditor({ language, value, onChange, theme = "vs" }) {
+export default function MonacoEditor({ language, value, onChange, theme = "vs", onCursorChange, onEditorFocus }) {
   const containerRef = useRef(null);
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
@@ -29,6 +29,18 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs" }
             vertical: "auto",
             horizontal: "auto",
           },
+        });
+
+        editorRef.current.onDidChangeCursorPosition((e) => {
+          if (onCursorChange) {
+            onCursorChange({ lineNumber: e.position.lineNumber, column: e.position.column });
+          }
+        });
+
+        editorRef.current.onDidFocusEditorWidget(() => {
+          if (onEditorFocus) {
+            onEditorFocus();
+          }
         });
 
         editorRef.current.onDidChangeModelContent(() => {
