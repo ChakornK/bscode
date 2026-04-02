@@ -206,7 +206,12 @@ export default function ChatPanel() {
       </div>
 
       <ChatContainerRoot className="flex-1 min-h-0 overflow-y-auto">
-        <ChatContainerContent className="space-y-4 p-4 min-h-full">
+        <ChatContainerContent className={`space-y-4 p-4 min-h-full flex flex-col ${messages.length === 0 ? "justify-center" : ""}`}>
+          {messages.length === 0 && (
+            <div className="flex justify-center items-center">
+              <p className="text-gray-400 text-lg text-center">We know you cant code without AI</p>
+            </div>
+          )}
           {messages.map((message) => {
             return (
               <MessageBasic
