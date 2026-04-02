@@ -361,7 +361,7 @@ const spawnBrainrotFlamePoof = (cursorCoords, typedText = "") => {
   }
 };
 
-const spawnWritingFireImage = (imagePaths) => {
+const spawnWritingFireImage = (imagePaths, cursorCoords) => {
   if (typeof window === "undefined") return;
   if (!Array.isArray(imagePaths) || imagePaths.length === 0) return;
 
@@ -382,8 +382,32 @@ const spawnWritingFireImage = (imagePaths) => {
   const approxSize = window.innerWidth * 0.1;
   const maxX = Math.max(window.innerWidth - approxSize, 0);
   const maxY = Math.max(window.innerHeight - approxSize, 0);
-  const x = Math.random() * maxX;
-  const y = Math.random() * maxY;
+
+  let x = Math.random() * maxX;
+  let y = Math.random() * maxY;
+
+  if (
+    cursorCoords &&
+    cursorCoords.left !== undefined &&
+    cursorCoords.top !== undefined
+  ) {
+    const safeRadius = Math.max(approxSize * 1.6, 180);
+    for (let tries = 0; tries < 20; tries += 1) {
+      const candidateX = Math.random() * maxX;
+      const candidateY = Math.random() * maxY;
+      const centerX = candidateX + approxSize / 2;
+      const centerY = candidateY + approxSize / 2;
+      const dx = centerX - cursorCoords.left;
+      const dy = centerY - cursorCoords.top;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > safeRadius) {
+        x = candidateX;
+        y = candidateY;
+        break;
+      }
+    }
+  }
 
   image.style.left = `${x}px`;
   image.style.top = `${y}px`;
@@ -674,7 +698,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                           if (!isDeletingKey && typedCharCount > 0) {
                             const typedText = getInsertedText(prev, v);
                             spawnBrainrotFlamePoof(cursorCoords, typedText);
-                            spawnWritingFireImage(writingFireImages);
+                            spawnWritingFireImage(writingFireImages, cursorCoords);
                           }
                           if (
                             isDeletingKey &&
@@ -713,7 +737,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                             if (!isDeletingKey && typedCharCount > 0) {
                               const typedText = getInsertedText(prev, v);
                               spawnBrainrotFlamePoof(cursorCoords, typedText);
-                              spawnWritingFireImage(writingFireImages);
+                              spawnWritingFireImage(writingFireImages, cursorCoords);
                             }
                             if (
                               isDeletingKey &&
@@ -747,7 +771,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc }) {
                             if (!isDeletingKey && typedCharCount > 0) {
                               const typedText = getInsertedText(prev, v);
                               spawnBrainrotFlamePoof(cursorCoords, typedText);
-                              spawnWritingFireImage(writingFireImages);
+                              spawnWritingFireImage(writingFireImages, cursorCoords);
                             }
                             if (
                               isDeletingKey &&
