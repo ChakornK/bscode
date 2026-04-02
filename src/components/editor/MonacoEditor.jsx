@@ -1,11 +1,23 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-export default function MonacoEditor({ language, value, onChange, theme = "vs", onCursorChange, onEditorFocus }) {
+export default function MonacoEditor({ language, value, onChange, theme = "vs", totalErrorCount = 0, isBlocked = false, onErrorCountChange }) {
   const containerRef = useRef(null);
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
+  const timeoutIdsRef = useRef(new Set());
+  const onChangeRef = useRef(onChange);
+  const onErrorCountChangeRef = useRef(onErrorCountChange);
+  const [errorCount, setErrorCount] = useState(0);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    onErrorCountChangeRef.current = onErrorCountChange;
+  }, [onErrorCountChange]);
 
   useEffect(() => {
     let mounted = true;
@@ -19,6 +31,7 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs", 
           value,
           language,
           theme,
+          readOnly: isBlocked,
           automaticLayout: true,
           minimap: { enabled: false },
           scrollBeyondLastLine: false,
@@ -31,20 +44,79 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs", 
           },
         });
 
-        editorRef.current.onDidChangeCursorPosition((e) => {
-          if (onCursorChange) {
-            onCursorChange({ lineNumber: e.position.lineNumber, column: e.position.column });
+        const updateErrorCount = () => {
+          const model = editorRef.current?.getModel();
+          if (!model) {
+            setErrorCount(0);
+            onErrorCountChangeRef.current?.(0);
+            return;
           }
-        });
 
-        editorRef.current.onDidFocusEditorWidget(() => {
-          if (onEditorFocus) {
-            onEditorFocus();
+          const markers = monaco.editor.getModelMarkers({ resource: model.uri });
+          const errors = markers.filter((marker) => marker.severity === monaco.MarkerSeverity.Error);
+          const nextCount = errors.length;
+          setErrorCount(nextCount);
+          onErrorCountChangeRef.current?.(nextCount);
+        };
+
+        editorRef.current.onDidChangeModelContent((event) => {
+          const model = editorRef.current?.getModel();
+          if (model) {
+            for (const change of event.changes) {
+              if (!change.text || !change.text.includes("6")) continue;
+
+              for (let i = 0; i < change.text.length; i += 1) {
+                if (change.text[i] !== "6") continue;
+
+                const sixStart = model.getPositionAt(change.rangeOffset + i);
+                const sixEnd = model.getPositionAt(change.rangeOffset + i + 1);
+                const decorationIds = model.deltaDecorations([], [
+                  {
+                    range: new monaco.Range(
+                      sixStart.lineNumber,
+                      sixStart.column,
+                      sixEnd.lineNumber,
+                      sixEnd.column
+                    ),
+                    options: {
+                      stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+                    },
+                  },
+                ]);
+
+                const timeoutId = setTimeout(() => {
+                  timeoutIdsRef.current.delete(timeoutId);
+                  const editor = editorRef.current;
+                  const activeModel = editor?.getModel();
+                  if (!editor || !activeModel) return;
+
+                  const decorationId = decorationIds[0];
+                  if (!decorationId) return;
+
+                  const range = activeModel.getDecorationRange(decorationId);
+                  activeModel.deltaDecorations([decorationId], []);
+                  if (!range) return;
+
+                  editor.executeEdits("auto-insert-7", [
+                    {
+                      range: new monaco.Range(
+                        range.endLineNumber,
+                        range.endColumn,
+                        range.endLineNumber,
+                        range.endColumn
+                      ),
+                      text: "7",
+                      forceMoveMarkers: true,
+                    },
+                  ]);
+                }, 2000);
+
+                timeoutIdsRef.current.add(timeoutId);
+              }
+            }
           }
-        });
 
-        editorRef.current.onDidChangeModelContent(() => {
-          if (onChange) {
+          if (onChangeRef.current) {
             const cursorPos = editorRef.current.getPosition();
             const layoutInfo = editorRef.current.getLayoutInfo();
             const topOffset = editorRef.current.getTopForLineNumber(cursorPos.lineNumber);
@@ -59,9 +131,23 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs", 
               left: containerRect.left + lineNumberWidth + (cursorPos.column * charWidth)
             };
             
-            onChange(editorRef.current.getValue(), cursorCoords);
+            onChangeRef.current(editorRef.current.getValue(), cursorCoords);
           }
+          updateErrorCount();
         });
+
+        updateErrorCount();
+
+        const markerSubscription = monaco.editor.onDidChangeMarkers(() => {
+          updateErrorCount();
+        });
+
+        const modelChangeSubscription = editorRef.current.onDidChangeModel(() => {
+          updateErrorCount();
+        });
+
+        editorRef.current.__markerSubscription = markerSubscription;
+        editorRef.current.__modelChangeSubscription = modelChangeSubscription;
       }
     };
 
@@ -69,11 +155,22 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs", 
 
     return () => {
       mounted = false;
+      onErrorCountChangeRef.current?.(0);
+      timeoutIdsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+      timeoutIdsRef.current.clear();
       if (editorRef.current) {
+        editorRef.current.__markerSubscription?.dispose?.();
+        editorRef.current.__modelChangeSubscription?.dispose?.();
         editorRef.current.dispose();
       }
     };
   }, [language, theme]);
+
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.updateOptions({ readOnly: isBlocked });
+    }
+  }, [isBlocked]);
 
   // Keep value in sync if it changes externally
   useEffect(() => {
@@ -82,5 +179,14 @@ export default function MonacoEditor({ language, value, onChange, theme = "vs", 
     }
   }, [value]);
 
-  return <div ref={containerRef} className="min-h-0 grow" />;
+  return (
+    <div className="relative flex min-h-0 grow flex-col">
+      <div ref={containerRef} className="min-h-0 grow" />
+
+      <div className="flex h-8 shrink-0 items-center justify-between border-t border-neutral-200 bg-neutral-50 px-3 text-xs font-medium text-neutral-700">
+        <span>Errors (All Editors)</span>
+        <span className={totalErrorCount >= 3 ? "font-semibold text-red-600" : "text-neutral-700"}>{totalErrorCount}</span>
+      </div>
+    </div>
+  );
 }
