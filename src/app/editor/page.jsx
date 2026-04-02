@@ -2,21 +2,12 @@
 
 import "react-splitter-layout/lib/index.css";
 import { EditorLayout } from "@/components/editor/EditorLayout";
-import {
-  ActivityBar,
-  SidebarProvider,
-  SidebarView,
-  useSidebar,
-} from "@/components/editor/EditorSidebar";
+import { ActivityBar, SidebarProvider, SidebarView, useSidebar } from "@/components/editor/EditorSidebar";
 import { EditorCodeProvider } from "@/components/editor/EditorCodeContext";
 import MonacoEditor from "@/components/editor/MonacoEditor";
 import { ThemeProvider, useTheme } from "@/components/editor/ThemeContext";
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import {
-  MdOutlineChat,
-  MdOutlineSlowMotionVideo,
-  MdOutlineTrain,
-} from "react-icons/md";
+import { MdOutlineChat, MdOutlineSlowMotionVideo, MdOutlineTrain } from "react-icons/md";
 import BrainRotVideos from "../components/BrainRotVideos";
 import ChatPanel from "@/components/ChatPanel";
 import dynamic from "next/dynamic";
@@ -44,12 +35,7 @@ const editorTabs = [
     id: "subway-surfers",
     title: "Subway Surfers",
     icon: MdOutlineTrain,
-    component: (
-      <iframe
-        className="h-full w-full"
-        src="https://subwaygame.bitbucket.io/file"
-      />
-    ),
+    component: <iframe className="h-full w-full" src="https://subwaygame.bitbucket.io/file" />,
   },
 ];
 
@@ -68,9 +54,7 @@ const playFahhhSound = () => {
 
   // Clone the node so rapid deletions overlap wildly instead of cutting off
   const overlapNode = fahhAudio.cloneNode();
-  overlapNode
-    .play()
-    .catch((e) => console.error("Audio playback blocked or file missing: ", e));
+  overlapNode.play().catch((e) => console.error("Audio playback blocked or file missing: ", e));
 };
 
 // Track accumulated characters at the bottom with physics
@@ -78,9 +62,14 @@ const fallingChars = [];
 const gravity = 0.3;
 const friction = 0.98;
 const bounce = 0.6;
-const groundLevel = window.innerHeight - 30;
 const charRadius = 12; // Approximate collision radius for characters
 const igniteTimers = new Set();
+
+// FIX: Initialize groundLevel dynamically instead of at module level
+const getGroundLevel = () => {
+  if (typeof window === "undefined") return 570; // fallback for SSR
+  return window.innerHeight - 30;
+};
 
 const igniteSettledChar = (charObj) => {
   if (!charObj?.el || !charObj.el.isConnected) return;
@@ -90,8 +79,7 @@ const igniteSettledChar = (charObj) => {
   charObj.el.style.transition = "color 1.6s ease, text-shadow 1.6s ease, filter 1.6s ease";
   charObj.el.style.color = "#ff5a1f";
   charObj.el.style.opacity = "0.28";
-  charObj.el.style.textShadow =
-    "0 0 8px rgba(255, 120, 0, 0.9), 0 0 18px rgba(255, 80, 0, 0.65), 0 2px 3px rgba(0,0,0,0.3)";
+  charObj.el.style.textShadow = "0 0 8px rgba(255, 120, 0, 0.9), 0 0 18px rgba(255, 80, 0, 0.65), 0 2px 3px rgba(0,0,0,0.3)";
   charObj.el.style.filter = "saturate(1.3)";
 
   charObj.el.animate(
@@ -105,7 +93,7 @@ const igniteSettledChar = (charObj) => {
       iterations: Infinity,
       direction: "alternate",
       easing: "ease-in-out",
-    }
+    },
   );
 
   const flame = document.createElement("div");
@@ -119,8 +107,7 @@ const igniteSettledChar = (charObj) => {
   flame.style.fontSize = `${42 + Math.random() * 22}px`;
   flame.style.opacity = "0.55";
   flame.style.transformOrigin = "bottom center";
-  flame.style.filter =
-    "drop-shadow(0 0 14px rgba(255, 120, 0, 0.95)) drop-shadow(0 0 26px rgba(255, 70, 0, 0.7))";
+  flame.style.filter = "drop-shadow(0 0 14px rgba(255, 120, 0, 0.95)) drop-shadow(0 0 26px rgba(255, 70, 0, 0.7))";
 
   document.body.appendChild(flame);
   charObj.flameEl = flame;
@@ -137,7 +124,7 @@ const igniteSettledChar = (charObj) => {
       iterations: Infinity,
       direction: "alternate",
       easing: "cubic-bezier(0.2, 0.75, 0.2, 1)",
-    }
+    },
   );
 };
 
@@ -157,6 +144,9 @@ const scheduleIgniteSettledChar = (charObj) => {
 let physicsAnimationId = null;
 
 const updatePhysics = () => {
+  if (typeof window === "undefined") return;
+
+  const groundLevel = getGroundLevel();
   let anyMoving = false;
 
   // Check collisions between characters
@@ -255,25 +245,16 @@ const updatePhysics = () => {
   }
 };
 
-const spawnFallingLetters = (oldStr, newStr, cursorCoords, color = '#333333') => {
-  if (typeof window === 'undefined') return;
+const spawnFallingLetters = (oldStr, newStr, cursorCoords, color = "#333333") => {
+  if (typeof window === "undefined") return;
   if (!oldStr || !newStr) return;
 
   // Calculate which exact letters were deleted
   let start = 0;
-  while (
-    start < oldStr.length &&
-    start < newStr.length &&
-    oldStr[start] === newStr[start]
-  )
-    start++;
+  while (start < oldStr.length && start < newStr.length && oldStr[start] === newStr[start]) start++;
   let endOld = oldStr.length - 1;
   let endNew = newStr.length - 1;
-  while (
-    endOld >= start &&
-    endNew >= start &&
-    oldStr[endOld] === newStr[endNew]
-  ) {
+  while (endOld >= start && endNew >= start && oldStr[endOld] === newStr[endNew]) {
     endOld--;
     endNew--;
   }
@@ -285,11 +266,7 @@ const spawnFallingLetters = (oldStr, newStr, cursorCoords, color = '#333333') =>
   let startX = window.innerWidth / 2;
   let startY = window.innerHeight / 3;
 
-  if (
-    cursorCoords &&
-    cursorCoords.top !== undefined &&
-    cursorCoords.left !== undefined
-  ) {
+  if (cursorCoords && cursorCoords.top !== undefined && cursorCoords.left !== undefined) {
     startX = cursorCoords.left;
     startY = cursorCoords.top;
   }
@@ -303,13 +280,13 @@ const spawnFallingLetters = (oldStr, newStr, cursorCoords, color = '#333333') =>
       el.innerText = char;
       el.style.position = "fixed";
       el.style.fontSize = `${Math.random() * 24 + 16}px`;
-      el.style.fontWeight = '900';
+      el.style.fontWeight = "900";
       el.style.color = color;
-      el.style.zIndex = '99999';
-      el.style.pointerEvents = 'none';
-      el.style.fontFamily = 'monospace';
-      el.style.textShadow = '0px 2px 4px rgba(0,0,0,0.3)';
-      
+      el.style.zIndex = "99999";
+      el.style.pointerEvents = "none";
+      el.style.fontFamily = "monospace";
+      el.style.textShadow = "0px 2px 4px rgba(0,0,0,0.3)";
+
       const offsetX = startX + (Math.random() - 0.5) * 40;
       const offsetY = startY + (Math.random() - 0.5) * 40;
 
@@ -344,21 +321,13 @@ const getInsertedText = (oldStr, newStr) => {
   if (!oldStr || !newStr || newStr.length <= oldStr.length) return "";
 
   let start = 0;
-  while (
-    start < oldStr.length &&
-    start < newStr.length &&
-    oldStr[start] === newStr[start]
-  ) {
+  while (start < oldStr.length && start < newStr.length && oldStr[start] === newStr[start]) {
     start++;
   }
 
   let endOld = oldStr.length - 1;
   let endNew = newStr.length - 1;
-  while (
-    endOld >= start &&
-    endNew >= start &&
-    oldStr[endOld] === newStr[endNew]
-  ) {
+  while (endOld >= start && endNew >= start && oldStr[endOld] === newStr[endNew]) {
     endOld--;
     endNew--;
   }
@@ -372,11 +341,7 @@ const spawnBrainrotFlamePoof = (cursorCoords, typedText = "") => {
   let x = window.innerWidth / 2;
   let y = window.innerHeight / 3;
 
-  if (
-    cursorCoords &&
-    cursorCoords.top !== undefined &&
-    cursorCoords.left !== undefined
-  ) {
+  if (cursorCoords && cursorCoords.top !== undefined && cursorCoords.left !== undefined) {
     x = cursorCoords.left;
     y = cursorCoords.top;
   }
@@ -423,7 +388,7 @@ const spawnBrainrotFlamePoof = (cursorCoords, typedText = "") => {
         duration: 420 + Math.random() * 160,
         easing: "cubic-bezier(0.2, 0.7, 0.2, 1)",
         fill: "forwards",
-      }
+      },
     );
 
     const poofAnim = poof.animate(
@@ -436,7 +401,7 @@ const spawnBrainrotFlamePoof = (cursorCoords, typedText = "") => {
         duration: 360 + Math.random() * 120,
         easing: "ease-out",
         fill: "forwards",
-      }
+      },
     );
 
     poofAnim.onfinish = () => {
@@ -471,11 +436,7 @@ const spawnWritingFireImage = (imagePaths, cursorCoords) => {
   let x = Math.random() * maxX;
   let y = Math.random() * maxY;
 
-  if (
-    cursorCoords &&
-    cursorCoords.left !== undefined &&
-    cursorCoords.top !== undefined
-  ) {
+  if (cursorCoords && cursorCoords.left !== undefined && cursorCoords.top !== undefined) {
     const safeRadius = Math.max(approxSize * 1.6, 180);
     for (let tries = 0; tries < 20; tries += 1) {
       const candidateX = Math.random() * maxX;
@@ -511,7 +472,7 @@ const spawnWritingFireImage = (imagePaths, cursorCoords) => {
       duration: 950,
       easing: "ease-out",
       fill: "forwards",
-    }
+    },
   );
 
   anim.onfinish = () => {
@@ -520,7 +481,11 @@ const spawnWritingFireImage = (imagePaths, cursorCoords) => {
 };
 
 let isDeletingKey = false;
-if (typeof window !== "undefined") {
+
+// FIX: Initialize event listeners only on client side
+const initializeKeyListeners = () => {
+  if (typeof window === "undefined") return;
+
   window.addEventListener(
     "keydown",
     (e) => {
@@ -530,7 +495,7 @@ if (typeof window !== "undefined") {
         isDeletingKey = false;
       }
     },
-    true
+    true,
   );
   window.addEventListener(
     "keyup",
@@ -539,31 +504,29 @@ if (typeof window !== "undefined") {
         isDeletingKey = false;
       }
     },
-    true
+    true,
   );
-}
+};
 
 export default function Editor() {
-  const [html, setHtml] = useState(
-    "<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>"
-  );
-  const [css, setCss] = useState(
-    "h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }"
-  );
+  const [html, setHtml] = useState("<h1>Hello World</h1>\n<p>Start editing to see the magic!</p>");
+  const [css, setCss] = useState("h1 { color: #007acc; }\nbody { font-family: sans-serif; padding: 20px; }");
   const [js, setJs] = useState("console.log('Hello from JS!');");
 
   const [cursorInfo, setCursorInfo] = useState({ lineNumber: 1, column: 1 });
   const [activeLanguage, setActiveLanguage] = useState("html");
 
   const [eruda, setEruda] = useState("");
+
+  // FIX: Initialize key listeners on client mount
+  useEffect(() => {
+    initializeKeyListeners();
+  }, []);
+
   useEffect(() => {
     fetch("https://cdn.jsdelivr.net/npm/eruda")
       .then((res) => res.text())
-      .then((text) =>
-        setEruda(
-          `<script>${text}\n;self.eruda.init({tool: ['console', 'elements'], useShadowDom: true, defaults: {theme: "Light"}});</script>`
-        )
-      );
+      .then((text) => setEruda(`<script>${text}\n;self.eruda.init({tool: ['console', 'elements'], useShadowDom: true, defaults: {theme: "Light"}});</script>`));
   }, []);
 
   const combinedCode = useMemo(() => {
@@ -579,7 +542,7 @@ export default function Editor() {
         <script>${js}</script>
       </html>
     `;
-  }, [html, css, js]);
+  }, [html, css, js, eruda]);
 
   const [srcDoc, setSrcDoc] = useState("");
 
@@ -610,32 +573,35 @@ export default function Editor() {
 
   return (
     <ThemeProvider>
-    <EditorLayout>
-      <div className="flex w-screen flex-1 overflow-hidden">
-        <EditorCodeProvider value={{ html, css, js }}>
-          <SidebarProvider
-            initialItems={editorTabs.map((tab) => ({
-              id: tab.id,
-              icon: tab.icon,
-              title: tab.title,
-              component: tab.component,
-            }))}
-          >
-            <EditorContent
-              html={html} setHtml={setHtml}
-              css={css} setCss={setCss}
-              js={js} setJs={setJs}
-              srcDoc={srcDoc}
-              onCursorChange={setCursorInfo}
-              onActiveLanguageChange={setActiveLanguage}
-            />
-          </SidebarProvider>
-        </EditorCodeProvider>
-      </div>
-      <EditorLayout.StatusBar>
-        <StatusBar cursorLine={cursorInfo.lineNumber} cursorColumn={cursorInfo.column} activeLanguage={activeLanguage} />
-      </EditorLayout.StatusBar>
-    </EditorLayout>
+      <EditorLayout>
+        <div className="flex w-screen flex-1 overflow-hidden">
+          <EditorCodeProvider value={{ html, css, js }}>
+            <SidebarProvider
+              initialItems={editorTabs.map((tab) => ({
+                id: tab.id,
+                icon: tab.icon,
+                title: tab.title,
+                component: tab.component,
+              }))}
+            >
+              <EditorContent
+                html={html}
+                setHtml={setHtml}
+                css={css}
+                setCss={setCss}
+                js={js}
+                setJs={setJs}
+                srcDoc={srcDoc}
+                onCursorChange={setCursorInfo}
+                onActiveLanguageChange={setActiveLanguage}
+              />
+            </SidebarProvider>
+          </EditorCodeProvider>
+        </div>
+        <EditorLayout.StatusBar>
+          <StatusBar cursorLine={cursorInfo.lineNumber} cursorColumn={cursorInfo.column} activeLanguage={activeLanguage} />
+        </EditorLayout.StatusBar>
+      </EditorLayout>
     </ThemeProvider>
   );
 }
@@ -645,8 +611,8 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
   const { activeId } = useSidebar();
   const { theme } = useTheme();
   const monacoTheme = theme === "dark" ? "vs-dark" : "vs";
-  
-  // Use persistent mutable refs to escape stale React closures 
+
+  // Use persistent mutable refs to escape stale React closures
   const [errorCounts, setErrorCounts] = useState({
     html: 0,
     css: 0,
@@ -658,10 +624,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
   const [captchaSolved, setCaptchaSolved] = useState(false);
   const [writingFireImages, setWritingFireImages] = useState([]);
   const previousTotalErrorCountRef = useRef(0);
-  const totalErrorCount = useMemo(
-    () => errorCounts.html + errorCounts.css + errorCounts.javascript,
-    [errorCounts]
-  );
+  const totalErrorCount = useMemo(() => errorCounts.html + errorCounts.css + errorCounts.javascript, [errorCounts]);
   const isBlocked = totalErrorCount >= 3 && !captchaSolved;
 
   // Use persistent mutable refs to escape stale React closures
@@ -736,10 +699,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
   };
 
   const documentPointerMoveOnceListener = ({ pointerId }) => {
-    document.removeEventListener(
-      "pointermove",
-      documentPointerMoveOnceListener
-    );
+    document.removeEventListener("pointermove", documentPointerMoveOnceListener);
     capturedPointerId = pointerId;
     document.documentElement.setPointerCapture(capturedPointerId);
   };
@@ -753,10 +713,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
   };
   useEffect(() => {
     return () => {
-      document.removeEventListener(
-        "pointermove",
-        documentPointerMoveOnceListener
-      );
+      document.removeEventListener("pointermove", documentPointerMoveOnceListener);
       releaseDocumentPointerCapture();
     };
   }, []);
@@ -768,12 +725,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
       </EditorLayout.ActivityBar>
 
       <div className="relative grow">
-        <SplitterLayout
-          horizontal
-          primaryIndex={1}
-          secondaryInitialSize={240}
-          secondaryMinSize={180}
-        >
+        <SplitterLayout horizontal primaryIndex={1} secondaryInitialSize={240} secondaryMinSize={180}>
           {activeId && (
             <EditorLayout.Sidebar>
               <SidebarView />
@@ -792,17 +744,9 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
             >
               <div className="flex h-full flex-col">
                 <div className="flex flex-1 overflow-hidden">
-                  <SplitterLayout
-                    vertical
-                    primaryIndex={0}
-                    percentage
-                    primaryInitialSize={33}
-                    secondaryInitialSize={66}
-                  >
+                  <SplitterLayout vertical primaryIndex={0} percentage primaryInitialSize={33} secondaryInitialSize={66}>
                     <div className="flex h-full flex-col bg-white">
-                      <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">
-                        HTML
-                      </div>
+                      <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">HTML</div>
                       <MonacoEditor
                         language="html"
                         value={html}
@@ -814,11 +758,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
                             spawnBrainrotFlamePoof(cursorCoords, typedText);
                             spawnWritingFireImage(writingFireImages, cursorCoords);
                           }
-                          if (
-                            isDeletingKey &&
-                            v.replace(/\s/g, "").length <
-                              prev.replace(/\s/g, "").length
-                          ) {
+                          if (isDeletingKey && v.replace(/\s/g, "").length < prev.replace(/\s/g, "").length) {
                             playFahhhSound();
                             spawnFallingLetters(prev, v, cursorCoords);
                           }
@@ -828,20 +768,12 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
                         theme="vs"
                         totalErrorCount={totalErrorCount}
                         isBlocked={isBlocked}
-                        onErrorCountChange={(count) =>
-                          updateLanguageErrorCount("html", count)
-                        }
+                        onErrorCountChange={(count) => updateLanguageErrorCount("html", count)}
                       />
                     </div>
-                    <SplitterLayout
-                      vertical
-                      primaryIndex={0}
-                      secondaryInitialSize={(window?.innerHeight ?? 0) / 3}
-                    >
+                    <SplitterLayout vertical primaryIndex={0} secondaryInitialSize={(typeof window !== "undefined" ? window.innerHeight : 600) / 3}>
                       <div className="flex h-full flex-col bg-white">
-                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">
-                          CSS
-                        </div>
+                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">CSS</div>
                         <MonacoEditor
                           language="css"
                           value={css}
@@ -853,11 +785,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
                               spawnBrainrotFlamePoof(cursorCoords, typedText);
                               spawnWritingFireImage(writingFireImages, cursorCoords);
                             }
-                            if (
-                              isDeletingKey &&
-                              v.replace(/\s/g, "").length <
-                                prev.replace(/\s/g, "").length
-                            ) {
+                            if (isDeletingKey && v.replace(/\s/g, "").length < prev.replace(/\s/g, "").length) {
                               playFahhhSound();
                               spawnFallingLetters(prev, v, cursorCoords);
                             }
@@ -867,15 +795,11 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
                           theme="vs"
                           totalErrorCount={totalErrorCount}
                           isBlocked={isBlocked}
-                          onErrorCountChange={(count) =>
-                            updateLanguageErrorCount("css", count)
-                          }
+                          onErrorCountChange={(count) => updateLanguageErrorCount("css", count)}
                         />
                       </div>
                       <div className="flex h-full flex-col bg-white">
-                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">
-                          JS
-                        </div>
+                        <div className="flex h-9 shrink-0 items-center bg-neutral-50 px-4 text-[11px] font-bold uppercase text-neutral-500">JS</div>
                         <MonacoEditor
                           language="javascript"
                           value={js}
@@ -887,11 +811,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
                               spawnBrainrotFlamePoof(cursorCoords, typedText);
                               spawnWritingFireImage(writingFireImages, cursorCoords);
                             }
-                            if (
-                              isDeletingKey &&
-                              v.replace(/\s/g, "").length <
-                                prev.replace(/\s/g, "").length
-                            ) {
+                            if (isDeletingKey && v.replace(/\s/g, "").length < prev.replace(/\s/g, "").length) {
                               playFahhhSound();
                               spawnFallingLetters(prev, v, cursorCoords);
                             }
@@ -901,9 +821,7 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
                           theme="vs"
                           totalErrorCount={totalErrorCount}
                           isBlocked={isBlocked}
-                          onErrorCountChange={(count) =>
-                            updateLanguageErrorCount("javascript", count)
-                          }
+                          onErrorCountChange={(count) => updateLanguageErrorCount("javascript", count)}
                         />
                       </div>
                     </SplitterLayout>
@@ -911,43 +829,27 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
                 </div>
               </div>
               <div className="flex h-full flex-col bg-white dark:bg-[#1e1e1e]">
-                <div className="flex h-9 shrink-0 items-center bg-[#ececec] dark:bg-[#2d2d2d] px-4 text-[11px] font-bold uppercase text-[#616161] dark:text-[#969696]">Output</div>
+                <div className="flex h-9 shrink-0 items-center bg-[#ececec] px-4 text-[11px] font-bold uppercase text-[#616161] dark:bg-[#2d2d2d] dark:text-[#969696]">
+                  Output
+                </div>
                 <iframe srcDoc={srcDoc} title="output" width="100%" height="100%" className="bg-white" />
               </div>
             </SplitterLayout>
 
             <div className="absolute bottom-0 left-0 right-0 z-20 flex h-9 items-center justify-between border-t border-neutral-200 bg-neutral-50 px-4 text-xs font-semibold">
-              <span className="text-neutral-700">
-                Combined Errors (HTML + CSS + JS)
-              </span>
-              <span
-                className={
-                  totalErrorCount >= 3 ? "text-red-600" : "text-neutral-700"
-                }
-              >
-                {totalErrorCount}
-              </span>
+              <span className="text-neutral-700">Combined Errors (HTML + CSS + JS)</span>
+              <span className={totalErrorCount >= 3 ? "text-red-600" : "text-neutral-700"}>{totalErrorCount}</span>
             </div>
 
             {showErrorPopup && (
               <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 p-4">
-                <form
-                  onSubmit={handleCaptchaSubmit}
-                  className="w-full max-w-sm rounded-md border border-red-200 bg-red-50 p-4 shadow-lg"
-                >
+                <form onSubmit={handleCaptchaSubmit} className="w-full max-w-sm rounded-md border border-red-200 bg-red-50 p-4 shadow-lg">
                   <div className="mb-2 text-sm font-semibold text-red-700">
-                    ts code is so ass twin 🥀 prove ur human to continue writing
-                    ass code or use llm
+                    ts code is so ass twin 🥀 prove ur human to continue writing ass code or use llm
                   </div>
-                  <div className="mb-3 text-xs text-red-700">
-                    Combined HTML/CSS/JS errors: {totalErrorCount}.
-                  </div>
+                  <div className="mb-3 text-xs text-red-700">Combined HTML/CSS/JS errors: {totalErrorCount}.</div>
 
-                  <img
-                    src="/tung.jpg"
-                    alt="Captcha placeholder"
-                    className="mb-3 h-40 w-full rounded border border-red-200 bg-white object-contain"
-                  />
+                  <img src="/tung.jpg" alt="Captcha placeholder" className="mb-3 h-40 w-full rounded border border-red-200 bg-white object-contain" />
 
                   <input
                     value={captchaInput}
@@ -957,17 +859,10 @@ function EditorContent({ html, setHtml, css, setCss, js, setJs, srcDoc, onCursor
                     autoFocus
                   />
 
-                  {captchaError && (
-                    <div className="mt-2 text-xs font-medium text-red-700">
-                      {captchaError}
-                    </div>
-                  )}
+                  {captchaError && <div className="mt-2 text-xs font-medium text-red-700">{captchaError}</div>}
 
                   <div className="mt-3 flex justify-end">
-                    <button
-                      className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-red-700"
-                      type="submit"
-                    >
+                    <button className="rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-red-700" type="submit">
                       Verify & Continue
                     </button>
                   </div>
