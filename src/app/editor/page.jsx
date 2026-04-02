@@ -612,23 +612,6 @@ export default function Editor() {
     <ThemeProvider>
     <EditorLayout>
       <div className="flex w-screen flex-1 overflow-hidden">
-        <SidebarProvider
-          initialItems={editorTabs.map((tab) => ({
-            id: tab.id,
-            icon: tab.icon,
-            title: tab.title,
-            component: tab.component,
-          }))}
-        >
-          <EditorContent
-            html={html} setHtml={setHtml}
-            css={css} setCss={setCss}
-            js={js} setJs={setJs}
-            srcDoc={srcDoc}
-            onCursorChange={setCursorInfo}
-            onActiveLanguageChange={setActiveLanguage}
-          />
-        </SidebarProvider>
         <EditorCodeProvider value={{ html, css, js }}>
           <SidebarProvider
             initialItems={editorTabs.map((tab) => ({
@@ -639,13 +622,12 @@ export default function Editor() {
             }))}
           >
             <EditorContent
-              html={html}
-              setHtml={setHtml}
-              css={css}
-              setCss={setCss}
-              js={js}
-              setJs={setJs}
+              html={html} setHtml={setHtml}
+              css={css} setCss={setCss}
+              js={js} setJs={setJs}
               srcDoc={srcDoc}
+              onCursorChange={setCursorInfo}
+              onActiveLanguageChange={setActiveLanguage}
             />
           </SidebarProvider>
         </EditorCodeProvider>
